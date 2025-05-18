@@ -23,39 +23,82 @@ export type NewCommentType = {
 };
 
 export async function fetchComments(newsId: string): Promise<CommentType[]> {
-  const { data, error } = await supabase
-    .from('comments')
-    .select(`
-      *,
-      profile:profiles(username, avatar_url)
-    `)
-    .eq('news_id', newsId)
-    .order('created_at', { ascending: false });
-  
-  if (error) {
-    console.error("Error fetching comments:", error);
+  try {
+    // First try to query with profile join
+    const { data, error } = await supabase
+      .from('comments')
+      .select(`
+        *,
+        profiles:user_id(username, avatar_url)
+      `)
+      .eq('news_id', newsId)
+      .order('created_at', { ascending: false });
+    
+    if (error) {
+      console.error("Error fetching comments with profiles:", error);
+      
+      // Fallback to just fetching comments without profile data
+      const { data: commentsOnly, error: commentsError } = await supabase
+        .from('comments')
+        .select('*')
+        .eq('news_id', newsId)
+        .order('created_at', { ascending: false });
+      
+      if (commentsError) {
+        throw commentsError;
+      }
+      
+      // Transform to match CommentType
+      return (commentsOnly || []).map(comment => ({
+        ...comment,
+        profile: null
+      })) as CommentType[];
+    }
+    
+    return (data || []) as CommentType[];
+  } catch (error) {
+    console.error("Error in fetchComments:", error);
     throw error;
   }
-  
-  return (data || []) as CommentType[];
 }
 
 export async function addComment(comment: NewCommentType): Promise<CommentType | null> {
-  const { data, error } = await supabase
-    .from('comments')
-    .insert([comment])
-    .select(`
-      *,
-      profile:profiles(username, avatar_url)
-    `)
-    .single();
-  
-  if (error) {
-    console.error("Error adding comment:", error);
+  try {
+    // First try to insert and return with profile data
+    const { data, error } = await supabase
+      .from('comments')
+      .insert([comment])
+      .select(`
+        *,
+        profiles:user_id(username, avatar_url)
+      `)
+      .single();
+    
+    if (error) {
+      console.error("Error adding comment with profile:", error);
+      
+      // Fallback to just inserting without returning profile data
+      const { data: commentOnly, error: insertError } = await supabase
+        .from('comments')
+        .insert([comment])
+        .select('*')
+        .single();
+      
+      if (insertError) {
+        throw insertError;
+      }
+      
+      return {
+        ...commentOnly,
+        profile: null
+      } as CommentType;
+    }
+    
+    return data as CommentType;
+  } catch (error) {
+    console.error("Error in addComment:", error);
     throw error;
   }
-  
-  return data as CommentType;
 }
 
 export async function updateComment(commentId: string, content: string): Promise<void> {

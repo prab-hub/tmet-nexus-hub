@@ -111,7 +111,14 @@ const ProfilePage = () => {
           .order('created_at', { ascending: false });
         
         if (commentsError) throw commentsError;
-        setUserComments(comments || []);
+        
+        // Add the profile property to match the CommentType
+        const commentsWithProfile = comments ? comments.map(comment => ({
+          ...comment,
+          profile: null // Add the profile property that's required by CommentType
+        })) : [];
+        
+        setUserComments(commentsWithProfile as (CommentType & { news: News })[]);
         
       } catch (error) {
         console.error("Error loading profile data:", error);

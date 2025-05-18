@@ -58,13 +58,14 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
     // Handle potential errors in the profile relation by ensuring proper structure
     return (data || []).map(item => {
       // Check if profile is an error object (failed relation)
+      // Use type guard to check if profile exists and has an 'error' property
       if (item.profile && typeof item.profile === 'object' && 'error' in item.profile) {
         return {
           ...item,
           profile: null // Replace error object with null
-        } as CommentType;
+        } as unknown as CommentType;
       }
-      return item as CommentType;
+      return item as unknown as CommentType;
     });
   } catch (error) {
     console.error("Error in fetchComments:", error);
@@ -105,14 +106,15 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     }
     
     // Handle potential errors in the profile relation
-    if (data.profile && typeof data.profile === 'object' && 'error' in data.profile) {
+    // Use type guard to check if profile exists and has an 'error' property
+    if (data && data.profile && typeof data.profile === 'object' && 'error' in data.profile) {
       return {
         ...data,
         profile: null
-      } as CommentType;
+      } as unknown as CommentType;
     }
     
-    return data as CommentType;
+    return data as unknown as CommentType;
   } catch (error) {
     console.error("Error in addComment:", error);
     throw error;

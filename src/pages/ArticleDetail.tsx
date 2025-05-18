@@ -22,6 +22,7 @@ import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import CommentSection from "../components/comments/CommentSection";
+import { supabase } from "@/integrations/supabase/client";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -33,7 +34,7 @@ const ArticleDetail = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState<boolean>(false);
-  const [likeCount, setLikeCount] = useState<number>(0); // Add dedicated like count state
+  const [likeCount, setLikeCount] = useState<number>(0);
   const [bookmarked, setBookmarked] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
@@ -50,6 +51,39 @@ const ArticleDetail = () => {
     }
   }, [location]);
   
+  // Check if the current user has liked or bookmarked this article
+  useEffect(() => {
+    if (isAuthenticated && user && article) {
+      const checkUserInteractions = async () => {
+        try {
+          // Check if user has liked this article
+          const { data: likeData } = await supabase
+            .from('likes')
+            .select('id')
+            .eq('news_id', article.id)
+            .eq('user_id', user.id)
+            .single();
+          
+          setLiked(!!likeData);
+          
+          // Check if user has bookmarked this article
+          const { data: bookmarkData } = await supabase
+            .from('bookmarks')
+            .select('id')
+            .eq('news_id', article.id)
+            .eq('user_id', user.id)
+            .single();
+          
+          setBookmarked(!!bookmarkData);
+        } catch (error) {
+          console.error("Error checking user interactions:", error);
+        }
+      };
+      
+      checkUserInteractions();
+    }
+  }, [isAuthenticated, user, article]);
+  
   useEffect(() => {
     async function loadArticle() {
       if (!id) return;
@@ -61,7 +95,7 @@ const ArticleDetail = () => {
         console.log("Fetched article:", newsItem);
         if (newsItem) {
           setArticle(newsItem);
-          setLikeCount(newsItem.likes_count || 0); // Initialize like count from article
+          setLikeCount(newsItem.likes_count || 0);
         } else {
           setError("Article not found");
         }
@@ -138,12 +172,15 @@ const ArticleDetail = () => {
   const handleShare = async () => {
     requireAuth('share', async () => {
       try {
+        // Create shareable URL
+        const shareUrl = window.location.href;
+        
         // Use navigator.share if available (mobile devices primarily)
         if (navigator.share) {
           await navigator.share({
             title: article?.title || 'TMET Hub Article',
             text: article?.summary || '',
-            url: window.location.href,
+            url: shareUrl,
           });
           
           // Track successful share
@@ -161,7 +198,7 @@ const ArticleDetail = () => {
           }
         } else {
           // Fallback for desktop browsers
-          await navigator.clipboard.writeText(window.location.href);
+          await navigator.clipboard.writeText(shareUrl);
           toast({
             title: "Link copied",
             description: "Article link copied to clipboard",

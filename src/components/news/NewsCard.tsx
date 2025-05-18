@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -115,43 +114,68 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
     e.stopPropagation(); // Prevent event bubbling
     
     requireAuth('share', () => {
-      // Open share dialog or use Web Share API if available
-      if (navigator.share) {
-        navigator.share({
-          title: news.title,
-          text: news.summary,
-          url: window.location.origin + `/article/${news.id}`,
-        })
-        .then(() => {
-          // Track share in the database
-          import("../../services/newsService").then(({ shareNews }) => {
-            shareNews(news.id, user?.id).catch(error => {
-              console.error("Failed to track share:", error);
+      try {
+        // Create the URL to be shared
+        const shareUrl = `${window.location.origin}/article/${news.id}`;
+        
+        // Use navigator.share if available (mobile devices primarily)
+        if (navigator.share) {
+          navigator.share({
+            title: news.title,
+            text: news.summary || '',
+            url: shareUrl,
+          })
+          .then(() => {
+            // Track share in the database
+            import("../../services/newsService").then(({ shareNews }) => {
+              if (user) {
+                shareNews(news.id, user?.id).catch(error => {
+                  console.error("Failed to track share:", error);
+                });
+              }
             });
-          });
-        })
-        .catch(error => {
-          if (error.name !== 'AbortError') {
+            
             toast({
-              title: "Share",
-              description: "Sharing functionality would be implemented here",
+              title: "Success",
+              description: "Article shared successfully",
               duration: 1500,
             });
-          }
-        });
-      } else {
-        // Fallback for browsers that don't support Web Share API
-        toast({
-          title: "Share",
-          description: "Sharing functionality would be implemented here",
-          duration: 1500,
-        });
-        
-        // Track share in the database
-        import("../../services/newsService").then(({ shareNews }) => {
-          shareNews(news.id, user?.id).catch(error => {
-            console.error("Failed to track share:", error);
+          })
+          .catch(error => {
+            if (error.name !== 'AbortError') {
+              // Copy to clipboard as fallback
+              navigator.clipboard.writeText(shareUrl);
+              toast({
+                title: "Link copied",
+                description: "Article link copied to clipboard",
+                duration: 1500,
+              });
+            }
           });
+        } else {
+          // Fallback for browsers that don't support Web Share API
+          navigator.clipboard.writeText(shareUrl);
+          toast({
+            title: "Link copied",
+            description: "Article link copied to clipboard",
+            duration: 1500,
+          });
+          
+          // Track share in the database
+          import("../../services/newsService").then(({ shareNews }) => {
+            if (user) {
+              shareNews(news.id, user?.id).catch(error => {
+                console.error("Failed to track share:", error);
+              });
+            }
+          });
+        }
+      } catch (error) {
+        toast({
+          title: "Share failed",
+          description: "Could not share the article",
+          variant: "destructive",
+          duration: 1500,
         });
       }
     });

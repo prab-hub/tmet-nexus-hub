@@ -37,7 +37,7 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
     throw error;
   }
   
-  return data as unknown as CommentType[];
+  return (data || []) as CommentType[];
 }
 
 export async function addComment(comment: NewCommentType): Promise<CommentType | null> {
@@ -55,7 +55,7 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     throw error;
   }
   
-  return data as unknown as CommentType;
+  return data as CommentType;
 }
 
 export async function updateComment(commentId: string, content: string): Promise<void> {

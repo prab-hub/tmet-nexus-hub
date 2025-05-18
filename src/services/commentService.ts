@@ -57,16 +57,17 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
       return (commentsOnly || []).map(comment => ({
         ...comment,
         profile: null
-      })) as CommentType[];
+      }));
     }
     
     // Handle potential errors in the profile relation by ensuring proper structure
     return (data || []).map(item => {
       // Check if profile is an error object (failed relation)
-      if (item.profile && typeof item.profile === 'object' && ('error' in item.profile)) {
+      // Using optional chaining and explicit null check to satisfy TypeScript
+      if (item.profile && typeof item.profile === 'object' && 'error' in (item.profile || {})) {
         return {
           ...item,
-          profile: null // Replace error object with null
+          profile: null
         } as unknown as CommentType;
       }
       return item as unknown as CommentType;
@@ -110,7 +111,8 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     }
     
     // Handle potential errors in the profile relation
-    if (data && data.profile && typeof data.profile === 'object' && ('error' in data.profile)) {
+    // Using optional chaining and explicit null check to satisfy TypeScript
+    if (data && data.profile && typeof data.profile === 'object' && 'error' in (data.profile || {})) {
       return {
         ...data,
         profile: null

@@ -63,9 +63,9 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
         return {
           ...item,
           profile: null // Replace error object with null
-        } as unknown as CommentType;
+        } as CommentType;
       }
-      return item as unknown as CommentType;
+      return item as CommentType;
     });
   } catch (error) {
     console.error("Error in fetchComments:", error);
@@ -111,10 +111,10 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
       return {
         ...data,
         profile: null
-      } as unknown as CommentType;
+      } as CommentType;
     }
     
-    return data as unknown as CommentType;
+    return data as CommentType;
   } catch (error) {
     console.error("Error in addComment:", error);
     throw error;

@@ -1,154 +1,170 @@
 
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
 
+// Define comment types
 export type CommentType = {
   id: string;
   content: string;
   created_at: string;
-  updated_at: string;
-  news_id: string;
   user_id: string;
-  parent_id: string | null;
-  profile?: {
-    username: string | null;
-    avatar_url: string | null;
+  news_id: string;
+  profile: {
+    username?: string;
+    avatar_url?: string;
   } | null;
 };
 
-// Define a type for the error object that might come from the profile relation
-type SelectQueryError = {
-  error: true;
-} & String;
-
-export type NewCommentType = {
-  content: string;
-  news_id: string;
-  user_id: string;
-  parent_id: string | null;
-};
-
-export async function fetchComments(newsId: string): Promise<CommentType[]> {
-  try {
-    // First try to query with profile join
-    const { data, error } = await supabase
-      .from('comments')
-      .select(`
-        *,
-        profile:profiles(username, avatar_url)
-      `)
-      .eq('news_id', newsId)
-      .order('created_at', { ascending: false });
-    
-    if (error) {
-      console.error("Error fetching comments with profiles:", error);
-      
-      // Fallback to just fetching comments without profile data
-      const { data: commentsOnly, error: commentsError } = await supabase
+export function useComments() {
+  const { toast } = useToast();
+  
+  /**
+   * Fetch comments for a specific news article
+   */
+  async function fetchComments(newsId: string, commentsOnly: boolean = false): Promise<CommentType[]> {
+    try {
+      let query = supabase
         .from('comments')
-        .select('*')
+        .select('*, profile:profiles(username, avatar_url)')
         .eq('news_id', newsId)
         .order('created_at', { ascending: false });
       
-      if (commentsError) {
-        throw commentsError;
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching comments:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load comments. Please try again later.',
+          variant: 'destructive',
+        });
+        return [];
       }
       
-      // Transform to match CommentType - ensure null profile
-      return (commentsOnly || []).map(comment => ({
-        ...comment,
-        profile: null
-      }));
-    }
-    
-    // Handle potential errors in the profile relation by ensuring proper structure
-    return (data || []).map(item => {
-      // Check if profile is an error object (failed relation)
-      // Using optional chaining and explicit null check to satisfy TypeScript
-      if (item.profile && typeof item.profile === 'object' && 'error' in (item.profile || {})) {
-        return {
-          ...item,
+      if (!data || data.length === 0) {
+        return [];
+      }
+      
+      // If commentsOnly is true, return just the comments without profile info
+      if (commentsOnly) {
+        return (data || []).map(comment => ({
+          ...comment,
           profile: null
-        } as unknown as CommentType;
+        })) as CommentType[];
       }
-      return item as unknown as CommentType;
-    });
-  } catch (error) {
-    console.error("Error in fetchComments:", error);
-    throw error;
-  }
-}
-
-export async function addComment(comment: NewCommentType): Promise<CommentType | null> {
-  try {
-    // First try to insert and return with profile data
-    const { data, error } = await supabase
-      .from('comments')
-      .insert([comment])
-      .select(`
-        *,
-        profile:profiles(username, avatar_url)
-      `)
-      .single();
-    
-    if (error) {
-      console.error("Error adding comment with profile:", error);
       
-      // Fallback to just inserting without returning profile data
-      const { data: commentOnly, error: insertError } = await supabase
+      // Handle potential errors in the profile relation by ensuring proper structure
+      return (data || []).map(item => {
+        // Safely check if profile has an error by first verifying profile exists
+        const profile = item.profile || {};
+        const hasError = typeof profile === 'object' && 'error' in profile;
+        
+        if (hasError) {
+          return {
+            ...item,
+            profile: null
+          } as CommentType;
+        }
+        return item as CommentType;
+      });
+    } catch (error) {
+      console.error('Error in fetchComments:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while loading comments.',
+        variant: 'destructive',
+      });
+      return [];
+    }
+  }
+  
+  /**
+   * Add a new comment
+   */
+  async function addComment(newsId: string, content: string, userId: string): Promise<CommentType | null> {
+    try {
+      // Insert the comment
+      const { data: commentData, error: commentError } = await supabase
         .from('comments')
-        .insert([comment])
-        .select('*')
+        .insert([
+          { news_id: newsId, content, user_id: userId }
+        ])
+        .select('*, profile:profiles(username, avatar_url)')
         .single();
       
-      if (insertError) {
-        throw insertError;
+      if (commentError) {
+        console.error('Error adding comment:', commentError);
+        toast({
+          title: 'Error',
+          description: 'Failed to add comment. Please try again later.',
+          variant: 'destructive',
+        });
+        return null;
       }
       
-      return {
-        ...commentOnly,
-        profile: null
-      } as CommentType;
+      if (!commentData) {
+        return null;
+      }
+      
+      // Handle potential errors in the profile relation
+      const data = commentData;
+      const profile = data.profile || {};
+      const hasError = typeof profile === 'object' && 'error' in profile;
+      
+      if (hasError) {
+        return {
+          ...data,
+          profile: null
+        } as CommentType;
+      }
+      
+      return data as CommentType;
+    } catch (error) {
+      console.error('Error in addComment:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while adding your comment.',
+        variant: 'destructive',
+      });
+      return null;
     }
-    
-    // Handle potential errors in the profile relation
-    // Using optional chaining and explicit null check to satisfy TypeScript
-    if (data && data.profile && typeof data.profile === 'object' && 'error' in (data.profile || {})) {
-      return {
-        ...data,
-        profile: null
-      } as unknown as CommentType;
+  }
+  
+  /**
+   * Delete a comment
+   */
+  async function deleteComment(commentId: string): Promise<boolean> {
+    try {
+      const { error } = await supabase
+        .from('comments')
+        .delete()
+        .eq('id', commentId);
+      
+      if (error) {
+        console.error('Error deleting comment:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to delete comment. Please try again later.',
+          variant: 'destructive',
+        });
+        return false;
+      }
+      
+      return true;
+    } catch (error) {
+      console.error('Error in deleteComment:', error);
+      toast({
+        title: 'Error',
+        description: 'An unexpected error occurred while deleting the comment.',
+        variant: 'destructive',
+      });
+      return false;
     }
-    
-    return data as unknown as CommentType;
-  } catch (error) {
-    console.error("Error in addComment:", error);
-    throw error;
   }
-}
-
-export async function updateComment(commentId: string, content: string): Promise<void> {
-  const { error } = await supabase
-    .from('comments')
-    .update({ 
-      content,
-      updated_at: new Date().toISOString()
-    })
-    .eq('id', commentId);
   
-  if (error) {
-    console.error("Error updating comment:", error);
-    throw error;
-  }
-}
-
-export async function deleteComment(commentId: string): Promise<void> {
-  const { error } = await supabase
-    .from('comments')
-    .delete()
-    .eq('id', commentId);
-  
-  if (error) {
-    console.error("Error deleting comment:", error);
-    throw error;
-  }
+  return {
+    fetchComments,
+    addComment,
+    deleteComment,
+  };
 }

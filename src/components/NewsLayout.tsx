@@ -100,7 +100,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
             </div>
           </div>
           
-          {/* Login/Profile Button - Already positioned at top right */}
+          {/* Login/Profile Button - Position at top right */}
           <div className="absolute top-4 right-4 z-10">
             {isAuthenticated ? (
               <DropdownMenu>

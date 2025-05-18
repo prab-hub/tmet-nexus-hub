@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -11,10 +11,16 @@ import {
   SidebarMenuItem,
   SidebarTrigger
 } from "@/components/ui/sidebar";
-import { Smartphone, Radio, Film, Laptop, TrendingUp } from "lucide-react";
+import { Smartphone, Radio, Film, Laptop, TrendingUp, Sparkles } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
+import type { NewsCategory } from "../services/newsService";
 
-const categories = [
+const categories: { title: string; icon: React.ElementType; id: NewsCategory | 'all' }[] = [
+  {
+    title: "All News",
+    icon: Sparkles,
+    id: "all"
+  },
   {
     title: "Telecom",
     icon: Smartphone,
@@ -64,14 +70,6 @@ const NewsSidebar = () => {
           <SidebarGroupLabel>Categories</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              <SidebarMenuItem key="all">
-                <SidebarMenuButton 
-                  isActive={activeCategory === "all"}
-                  onClick={() => handleCategoryClick("all")}
-                >
-                  <span>All News</span>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
               {categories.map((category) => (
                 <SidebarMenuItem key={category.id}>
                   <SidebarMenuButton 

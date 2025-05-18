@@ -9,7 +9,222 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          news_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          news_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          news_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookmarks_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comments: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          news_id: string
+          parent_id: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          news_id: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          news_id?: string
+          parent_id?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comments_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      likes: {
+        Row: {
+          created_at: string
+          id: string
+          news_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          news_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          news_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      news: {
+        Row: {
+          categories: Database["public"]["Enums"]["news_category"][]
+          comments_count: number
+          content: string | null
+          created_at: string
+          id: string
+          image_url: string | null
+          likes_count: number
+          metadata: Json | null
+          news_date: string
+          shares_count: number
+          source: string | null
+          source_image_url: string | null
+          summary: string | null
+          tags: Database["public"]["Enums"]["news_tag"][]
+          title: string
+        }
+        Insert: {
+          categories?: Database["public"]["Enums"]["news_category"][]
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          metadata?: Json | null
+          news_date?: string
+          shares_count?: number
+          source?: string | null
+          source_image_url?: string | null
+          summary?: string | null
+          tags?: Database["public"]["Enums"]["news_tag"][]
+          title: string
+        }
+        Update: {
+          categories?: Database["public"]["Enums"]["news_category"][]
+          comments_count?: number
+          content?: string | null
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          likes_count?: number
+          metadata?: Json | null
+          news_date?: string
+          shares_count?: number
+          source?: string | null
+          source_image_url?: string | null
+          summary?: string | null
+          tags?: Database["public"]["Enums"]["news_tag"][]
+          title?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          username?: string | null
+        }
+        Relationships: []
+      }
+      shares: {
+        Row: {
+          created_at: string
+          id: string
+          news_id: string
+          platform: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          news_id: string
+          platform?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          news_id?: string
+          platform?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shares_news_id_fkey"
+            columns: ["news_id"]
+            isOneToOne: false
+            referencedRelation: "news"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +233,22 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      news_category:
+        | "technology"
+        | "telecom"
+        | "media"
+        | "entertainment"
+        | "trending"
+        | "new"
+      news_tag:
+        | "M&A"
+        | "funding"
+        | "new tech"
+        | "product launch"
+        | "earnings"
+        | "regulation"
+        | "interview"
+        | "opinion"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +363,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      news_category: [
+        "technology",
+        "telecom",
+        "media",
+        "entertainment",
+        "trending",
+        "new",
+      ],
+      news_tag: [
+        "M&A",
+        "funding",
+        "new tech",
+        "product launch",
+        "earnings",
+        "regulation",
+        "interview",
+        "opinion",
+      ],
+    },
   },
 } as const

@@ -5,7 +5,7 @@ import NewsSidebar from "./NewsSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut, User } from "lucide-react";
+import { LogIn, LogOut, User, Shield } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { 
   DropdownMenu,
@@ -92,6 +92,15 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
       <div className="min-h-screen flex w-full">
         <NewsSidebar />
         <main className="flex-1 overflow-hidden relative">
+          {/* Company Logo - Add to top left */}
+          <div className="absolute top-4 left-4 z-10 flex items-center">
+            <div className="flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary" />
+              <span className="font-bold text-lg">TMET Hub</span>
+            </div>
+          </div>
+          
+          {/* Login/Profile Button - Already positioned at top right */}
           <div className="absolute top-4 right-4 z-10">
             {isAuthenticated ? (
               <DropdownMenu>

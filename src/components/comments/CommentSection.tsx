@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send, CornerDownRight, Trash, Edit } from "lucide-react";
+import { Send, CornerDownRight, Trash, Edit, X } from "lucide-react";
 import { useAuth } from "../../services/authService";
 import { useToast } from "@/components/ui/use-toast";
 import { formatDistanceToNow } from "date-fns";

@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,7 @@ const ArticleDetail = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState<boolean>(false);
+  const [likeCount, setLikeCount] = useState<number>(0); // Add dedicated like count state
   const [bookmarked, setBookmarked] = useState<boolean>(false);
   const [imageError, setImageError] = useState<boolean>(false);
   const [retryCount, setRetryCount] = useState<number>(0);
@@ -61,6 +61,7 @@ const ArticleDetail = () => {
         console.log("Fetched article:", newsItem);
         if (newsItem) {
           setArticle(newsItem);
+          setLikeCount(newsItem.likes_count || 0); // Initialize like count from article
         } else {
           setError("Article not found");
         }
@@ -86,13 +87,19 @@ const ArticleDetail = () => {
   
   const handleLike = async () => {
     requireAuth('like', async () => {
-      setLiked(!liked);
+      const newLikedState = !liked;
+      setLiked(newLikedState);
+      
+      // Update like count immediately for better UX
+      setLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
       
       if (user && article) {
         try {
           await likeNews(article.id, user.id);
         } catch (error) {
+          // Revert the UI if the API call fails
           setLiked(liked);
+          setLikeCount(prev => liked ? prev - 1 : prev + 1);
           toast({
             title: "Error",
             description: "Failed to update like status",
@@ -130,49 +137,54 @@ const ArticleDetail = () => {
   
   const handleShare = async () => {
     requireAuth('share', async () => {
-      // Try to use Web Share API if available
-      if (navigator.share) {
-        try {
+      try {
+        // Use navigator.share if available (mobile devices primarily)
+        if (navigator.share) {
           await navigator.share({
             title: article?.title || 'TMET Hub Article',
             text: article?.summary || '',
             url: window.location.href,
           });
           
-          // Track share
-          if (article) {
+          // Track successful share
+          if (article && user) {
             try {
-              await shareNews(article.id, user?.id);
+              await shareNews(article.id, user.id);
+              toast({
+                title: "Success",
+                description: "Article shared successfully",
+                duration: 1500,
+              });
             } catch (error) {
               console.error("Failed to track share:", error);
             }
           }
-        } catch (err) {
-          if ((err as Error).name !== 'AbortError') {
-            toast({
-              title: "Share",
-              description: "Failed to share article",
-              duration: 1500,
-            });
-          }
-        }
-      } else {
-        // Fallback for browsers that don't support Web Share API
-        navigator.clipboard.writeText(window.location.href).then(() => {
+        } else {
+          // Fallback for desktop browsers
+          await navigator.clipboard.writeText(window.location.href);
           toast({
             title: "Link copied",
             description: "Article link copied to clipboard",
             duration: 1500,
           });
-        });
-        
-        // Track share
-        if (article) {
-          try {
-            await shareNews(article.id, user?.id);
-          } catch (error) {
-            console.error("Failed to track share:", error);
+          
+          // Track share via copy to clipboard
+          if (article && user) {
+            try {
+              await shareNews(article.id, user.id);
+            } catch (error) {
+              console.error("Failed to track share:", error);
+            }
           }
+        }
+      } catch (err) {
+        if ((err as Error).name !== 'AbortError') {
+          toast({
+            title: "Share failed",
+            description: "Could not share the article. Try copying the link manually.",
+            duration: 1500,
+            variant: "destructive"
+          });
         }
       }
     });
@@ -343,7 +355,7 @@ const ArticleDetail = () => {
           >
             <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
           </Button>
-          <span className="text-xs mt-1">{article.likes_count}</span>
+          <span className="text-xs mt-1 font-medium bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full text-white">{likeCount}</span>
         </div>
         <div className="flex flex-col items-center">
           <Button 
@@ -354,7 +366,7 @@ const ArticleDetail = () => {
           >
             <MessageCircle className="h-5 w-5" />
           </Button>
-          <span className="text-xs mt-1">{article.comments_count || 0}</span>
+          <span className="text-xs mt-1 font-medium bg-black/30 backdrop-blur-sm px-2 py-0.5 rounded-full text-white">{article?.comments_count || 0}</span>
         </div>
         <Button 
           variant="ghost" 

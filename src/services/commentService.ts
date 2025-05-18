@@ -48,14 +48,24 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
         throw commentsError;
       }
       
-      // Transform to match CommentType
+      // Transform to match CommentType - ensure null profile
       return (commentsOnly || []).map(comment => ({
         ...comment,
         profile: null
       })) as CommentType[];
     }
     
-    return (data || []) as CommentType[];
+    // Handle potential errors in the profile relation by ensuring proper structure
+    return (data || []).map(item => {
+      // Check if profile is an error object (failed relation)
+      if (item.profile && typeof item.profile === 'object' && 'error' in item.profile) {
+        return {
+          ...item,
+          profile: null // Replace error object with null
+        } as CommentType;
+      }
+      return item as CommentType;
+    });
   } catch (error) {
     console.error("Error in fetchComments:", error);
     throw error;
@@ -90,6 +100,14 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
       
       return {
         ...commentOnly,
+        profile: null
+      } as CommentType;
+    }
+    
+    // Handle potential errors in the profile relation
+    if (data.profile && typeof data.profile === 'object' && 'error' in data.profile) {
+      return {
+        ...data,
         profile: null
       } as CommentType;
     }

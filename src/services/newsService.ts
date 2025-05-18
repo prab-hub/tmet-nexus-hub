@@ -26,6 +26,21 @@ export async function fetchNews(category?: NewsCategory | 'all') {
   return data || [];
 }
 
+export async function fetchNewsById(id: string): Promise<News | null> {
+  const { data, error } = await supabase
+    .from('news')
+    .select('*')
+    .eq('id', id)
+    .single();
+  
+  if (error) {
+    console.error("Error fetching news by ID:", error);
+    throw error;
+  }
+  
+  return data;
+}
+
 export function useNews(category?: NewsCategory | 'all') {
   return useQuery({
     queryKey: ['news', category],

@@ -5,7 +5,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type News, type NewsCategory } from "../services/newsService";
 import { useAuth } from "../services/authService";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +15,7 @@ const NewsFeed = () => {
   const [previousIndex, setPreviousIndex] = useState(0);
   
   const location = useLocation();
+  const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const categoryFilter = (searchParams.get("category") || "all") as NewsCategory | 'all';
   
@@ -82,11 +83,21 @@ const NewsFeed = () => {
       <div className="h-screen w-full flex items-center justify-center">
         <div className="text-center p-8">
           <h2 className="text-2xl font-bold mb-2">No news in this category</h2>
-          <p className="text-gray-500">Try selecting a different category</p>
+          <p className="text-gray-500">Try selecting a different category or insert sample data</p>
+          <Button 
+            className="mt-4"
+            onClick={() => navigate('/')}
+          >
+            Go to Home
+          </Button>
         </div>
       </div>
     );
   }
+
+  const handleViewArticle = (newsId: string) => {
+    navigate(`/article/${newsId}`);
+  };
 
   return (
     <div className="h-screen w-full relative">
@@ -99,7 +110,8 @@ const NewsFeed = () => {
             >
               <NewsCard 
                 news={newsItem} 
-                isActive={index === activeIndex} 
+                isActive={index === activeIndex}
+                onViewArticle={handleViewArticle}
               />
             </div>
           ))}
@@ -126,14 +138,20 @@ const NewsFeed = () => {
 interface NewsCardProps {
   news: News;
   isActive: boolean;
+  onViewArticle: (id: string) => void;
 }
 
-const NewsCard = ({ news, isActive }: NewsCardProps) => {
+const NewsCard = ({ news, isActive, onViewArticle }: NewsCardProps) => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [likes, setLikes] = useState(news.likes_count || 0);
   const { user, isAuthenticated } = useAuth();
   
+  const handleClick = () => {
+    // Navigate to the article detail page when clicked
+    onViewArticle(news.id);
+  };
+
   const handleLike = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
 
@@ -248,7 +266,10 @@ const NewsCard = ({ news, isActive }: NewsCardProps) => {
   };
 
   return (
-    <Card className={`h-full w-full overflow-hidden relative rounded-none border-0 transition-opacity duration-300 ${isActive ? 'opacity-100' : 'opacity-0'}`}>
+    <Card 
+      className={`h-full w-full overflow-hidden relative rounded-none border-0 transition-opacity duration-300 cursor-pointer ${isActive ? 'opacity-100' : 'opacity-0'}`}
+      onClick={handleClick}
+    >
       <div 
         className="absolute inset-0 bg-center bg-cover transition-transform duration-700"
         style={{ 

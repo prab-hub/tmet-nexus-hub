@@ -92,58 +92,63 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
       <div className="min-h-screen flex w-full">
         <NewsSidebar />
         <main className="flex-1 overflow-hidden relative">
-          {/* Company Logo - Add to top left */}
-          <div className="absolute top-4 left-4 z-10 flex items-center">
+          {/* Fixed Header with Logo and Auth Buttons */}
+          <div className="fixed top-0 left-0 right-0 h-16 z-50 bg-black/30 backdrop-blur-md flex justify-between items-center px-4 md:px-6 shadow-md">
+            {/* Company Logo */}
             <div className="flex items-center gap-2">
               <Shield className="h-6 w-6 text-primary" />
-              <span className="font-bold text-lg">TMET Hub</span>
+              <span className="font-bold text-lg text-white">TMET Hub</span>
+            </div>
+            
+            {/* Login/Profile Button */}
+            <div>
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="icon"
+                      className="rounded-full bg-black/50 backdrop-blur-sm border border-white/10 text-white"
+                    >
+                      <Avatar className="h-8 w-8">
+                        {userProfile?.avatar_url ? (
+                          <AvatarImage src={userProfile.avatar_url} />
+                        ) : (
+                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                            {getInitials(user?.email, userProfile?.username)}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{userProfile?.username || user?.email}</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={goToProfile}>
+                      <User className="h-4 w-4 mr-2" /> Profile
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" /> Log out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleLogin}
+                  className="bg-black/50 border-white/10 text-white hover:bg-white/10 hover:text-white"
+                >
+                  <LogIn className="h-4 w-4 mr-2" /> Sign In
+                </Button>
+              )}
             </div>
           </div>
           
-          {/* Login/Profile Button - Position at top right */}
-          <div className="absolute top-4 right-4 z-10">
-            {isAuthenticated ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="icon"
-                    className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
-                  >
-                    <Avatar className="h-8 w-8">
-                      {userProfile?.avatar_url ? (
-                        <AvatarImage src={userProfile.avatar_url} />
-                      ) : (
-                        <AvatarFallback className="bg-transparent text-white text-sm">
-                          {getInitials(user?.email, userProfile?.username)}
-                        </AvatarFallback>
-                      )}
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>{userProfile?.username || user?.email}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={goToProfile}>
-                    <User className="h-4 w-4 mr-2" /> Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="h-4 w-4 mr-2" /> Log out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={handleLogin}
-                className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
-              >
-                <LogIn className="h-5 w-5" />
-              </Button>
-            )}
+          {/* Add padding to account for the fixed header */}
+          <div className="pt-16">
+            {children}
           </div>
-          {children}
         </main>
       </div>
     </SidebarProvider>

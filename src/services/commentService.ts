@@ -27,7 +27,7 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
     .from('comments')
     .select(`
       *,
-      profile:profiles!user_id(username, avatar_url)
+      profile:profiles(username, avatar_url)
     `)
     .eq('news_id', newsId)
     .order('created_at', { ascending: false });
@@ -37,7 +37,7 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
     throw error;
   }
   
-  return data as CommentType[];
+  return data as unknown as CommentType[];
 }
 
 export async function addComment(comment: NewCommentType): Promise<CommentType | null> {
@@ -46,7 +46,7 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     .insert([comment])
     .select(`
       *,
-      profile:profiles!user_id(username, avatar_url)
+      profile:profiles(username, avatar_url)
     `)
     .single();
   
@@ -55,7 +55,7 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     throw error;
   }
   
-  return data as CommentType;
+  return data as unknown as CommentType;
 }
 
 export async function updateComment(commentId: string, content: string): Promise<void> {

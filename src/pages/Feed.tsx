@@ -30,10 +30,10 @@ const Feed = () => {
   };
 
   return (
-    <NewsLayout>
+    <div className="min-h-screen flex flex-col w-full">
       {/* Mobile category selector */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-20 px-4 pt-4 pb-2 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+        <div className="fixed top-0 left-0 right-0 z-20 px-4 pt-6 pb-2 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
           <Select 
             value={currentCategory} 
             onValueChange={handleCategoryChange}
@@ -54,7 +54,7 @@ const Feed = () => {
       
       {/* Desktop category selector */}
       {!isMobile && (
-        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-20 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
           <NavigationMenu>
             <NavigationMenuList>
               {categories.map((category) => (
@@ -75,8 +75,10 @@ const Feed = () => {
         </div>
       )}
       
-      <NewsFeed />
-    </NewsLayout>
+      <div className="flex-1">
+        <NewsFeed />
+      </div>
+    </div>
   );
 };
 

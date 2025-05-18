@@ -117,7 +117,7 @@ const NewsFeed = () => {
   };
 
   // Adjust top padding based on whether we're on mobile (for the selector)
-  const topPaddingClass = isMobile ? "pt-16" : "";
+  const topPaddingClass = isMobile ? "pt-20" : "pt-16";
 
   return (
     <div className={`h-screen w-full relative overflow-hidden ${topPaddingClass}`}>
@@ -285,8 +285,21 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     });
   };
 
+  // Maximum retries for image loading
+  const MAX_RETRIES = 2;
+  const [retryCount, setRetryCount] = useState(0);
+
   const handleImageError = () => {
-    setImageError(true);
+    if (retryCount < MAX_RETRIES) {
+      // Try again with a small delay
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        // Force re-render the image
+        setImageError(false);
+      }, 500);
+    } else {
+      setImageError(true);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -321,7 +334,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     }
   };
 
-  const imageUrl = imageError || !news.image_url ? getBackupImage() : news.image_url;
+  const imageUrl = (imageError || !news.image_url) ? getBackupImage() : news.image_url;
 
   return (
     <Card 
@@ -335,6 +348,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
             alt={news.title}
             className="w-full h-full object-cover"
             onError={handleImageError}
+            key={`${imageUrl}-${retryCount}`} // Force re-render on retry
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
         </AspectRatio>

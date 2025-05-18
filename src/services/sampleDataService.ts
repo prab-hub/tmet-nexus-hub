@@ -57,9 +57,9 @@ export async function insertSampleNews() {
       },
       // Media News
       {
-        title: "Netflix Secures Exclusive Streaming Rights for Major Film Festival Winners",
-        summary: "Netflix has outbid competitors to secure exclusive streaming rights for award-winning films from major international film festivals.",
-        content: "<p>In a move that further solidifies its position in the film industry, Netflix has secured exclusive streaming rights for a slate of award-winning films from major international film festivals, including Cannes, Venice, and Sundance.</p><p>The multi-year deal, reportedly worth over $300 million, gives Netflix first access to stream films that receive top honors at these prestigious festivals, often considered indicators of future Oscar contenders.</p><p>\"This partnership allows us to bring critically acclaimed cinema directly to our subscribers while supporting the art of filmmaking,\" said Netflix's Chief Content Officer. The agreement has been met with mixed reactions from traditional cinema chains, who worry about further erosion of theatrical exclusivity windows.</p><p>Industry analysts note that this represents another significant shift in how premium content reaches audiences, with streaming platforms increasingly becoming primary destinations for high-quality films rather than secondary distribution channels.</p><p>The first films under this new agreement will begin streaming on Netflix in October.</p>",
+        title: "Netflix Acquires Indie Film Studio for $500 Million",
+        summary: "Netflix has acquired independent film studio Dreamlight Pictures in a move to boost its original content production capabilities.",
+        content: "<p>In a strategic move to strengthen its position in the competitive streaming market, Netflix has acquired independent film studio Dreamlight Pictures for $500 million. The acquisition will give Netflix exclusive access to Dreamlight's award-winning team of directors and producers, as well as their upcoming slate of projects.</p><p>Dreamlight Pictures, founded in 2010, has gained critical acclaim for producing thought-provoking independent films that have performed well at major film festivals. Their catalog includes three Academy Award-nominated features and numerous indie hits.</p><p>\"This acquisition represents our ongoing commitment to bringing diverse and innovative storytelling to our global audience,\" said Netflix's Chief Content Officer in a statement. \"The team at Dreamlight has consistently created compelling content that resonates with viewers and critics alike.\"</p><p>Industry analysts see this as part of Netflix's broader strategy to secure a steady pipeline of high-quality original content as competition in the streaming space intensifies. The Dreamlight team will remain intact and operate as a semi-autonomous unit within Netflix's broader content creation division.</p>",
         source: "Variety",
         source_image_url: "https://placehold.co/50?text=Var",
         image_url: "https://placehold.co/1200x800?text=Netflix+Films",
@@ -99,6 +99,49 @@ export async function insertSampleNews() {
         likes_count: 487,
         comments_count: 143,
         shares_count: 256
+      },
+      // Additional new sample articles
+      {
+        title: "Gaming Industry Revenue Surpasses Film and Music Combined",
+        summary: "New data shows the global gaming industry has generated more revenue than the film and music industries combined for the first time.",
+        content: "<p>The gaming industry has reached a historic milestone, generating more revenue than the film and music industries combined for the first time in history. According to a new report by market research firm SuperData, gaming generated over $180 billion globally last year, compared to $100 billion for films and $20 billion for recorded music.</p><p>The explosive growth has been fueled by the pandemic's stay-at-home orders, the rise of mobile gaming, and the increasing mainstream acceptance of gaming as a primary entertainment medium. Industry analysts note that gaming's interactive nature gives it a unique advantage over passive forms of entertainment.</p><p>\"What we're seeing is a fundamental shift in how people choose to spend their entertainment time and dollars,\" said the report's lead analyst. \"Gaming offers something that traditional media cannot: active participation in the story and social connections with other players.\"</p><p>The report also highlights the diversification of the gaming audience, with nearly equal gender distribution and growth across all age demographics. This broader appeal has attracted significant investment, with venture capital funding for gaming startups reaching record levels.</p>",
+        source: "Bloomberg",
+        source_image_url: "https://placehold.co/50?text=BB",
+        image_url: "https://placehold.co/1200x800?text=Gaming+Revenue",
+        categories: ["entertainment"],
+        tags: ["industry", "gaming"],
+        news_date: new Date(Date.now() - 4 * 86400000).toISOString(), // 4 days ago
+        likes_count: 378,
+        comments_count: 92,
+        shares_count: 156
+      },
+      {
+        title: "Major Telecom Companies Agree on New 6G Development Standards",
+        summary: "Leading telecom providers have reached an agreement on preliminary standards for 6G technology development, setting the stage for the next generation of wireless connectivity.",
+        content: "<p>In a landmark agreement, the world's largest telecommunications companies have established preliminary standards for the development of 6G technology, even as 5G deployment continues worldwide. The agreement, facilitated by the International Telecommunication Union, outlines technical specifications and development timelines for what will become the next generation of wireless connectivity.</p><p>While commercial deployment of 6G remains at least 7-8 years away, the early standardization represents an unprecedented level of industry cooperation. Technical goals include theoretical peak speeds of up to 1 terabit per second, latency measured in microseconds rather than milliseconds, and significantly improved energy efficiency.</p><p>\"By agreeing on these foundations now, we can ensure more coordinated research efforts and ultimately a smoother transition when the technology is ready for deployment,\" said the ITU Secretary-General in a statement.</p><p>The standards emphasize integration with artificial intelligence, support for holographic communications, and advanced sensing capabilities that could allow networks to function as distributed radar systems.</p><p>Analysts note that this early coordination could help avoid the fragmented approaches that initially complicated 5G rollouts in some regions.</p>",
+        source: "IEEE Spectrum",
+        source_image_url: "https://placehold.co/50?text=IEEE",
+        image_url: "https://placehold.co/1200x800?text=6G+Standards",
+        categories: ["telecom", "technology"],
+        tags: ["new tech", "industry"],
+        news_date: new Date(Date.now() - 5 * 86400000).toISOString(), // 5 days ago
+        likes_count: 253,
+        comments_count: 87,
+        shares_count: 119
+      },
+      {
+        title: "Streaming Platforms Facing Increased Regulation in European Markets",
+        summary: "European regulators have introduced new content quotas and tax structures for streaming platforms operating within the EU.",
+        content: "<p>Streaming giants like Netflix, Amazon Prime, and Disney+ are facing stricter regulations across European markets as the EU implements new directives aimed at supporting local content production and ensuring fair taxation.</p><p>The updated Audiovisual Media Services Directive now requires streaming platforms operating in EU countries to ensure at least 30% of their catalogs consist of European-produced content, up from the previous 20% requirement. Additionally, platforms must contribute a percentage of their in-country revenue to national film funds that support local productions.</p><p>\"These measures are not about protectionism, but about cultural diversity and ensuring that European stories continue to be told in the digital age,\" said the EU Commissioner for Culture. The directive also introduces more stringent age verification requirements and hate speech monitoring obligations.</p><p>Several major streaming services have already announced increased investment in European production facilities. Netflix recently expanded its production hub in Spain, while Amazon has committed to new original content initiatives in France, Germany, and Italy.</p><p>Industry analysts suggest these regulations could lead to further regionalization of streaming content strategies, with platforms potentially developing more localized approaches to different markets rather than pursuing purely global content strategies.</p>",
+        source: "Financial Times",
+        source_image_url: "https://placehold.co/50?text=FT",
+        image_url: "https://placehold.co/1200x800?text=EU+Streaming",
+        categories: ["media", "trending"],
+        tags: ["regulation", "streaming"],
+        news_date: new Date(Date.now() - 6 * 86400000).toISOString(), // 6 days ago
+        likes_count: 198,
+        comments_count: 76,
+        shares_count: 94
       }
     ];
 

@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 const NewsFeed = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,15 +26,24 @@ const NewsFeed = () => {
   useEffect(() => {
     setActiveIndex(0);
     setPreviousIndex(0);
+    
+    // Scroll to top when category changes
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0;
+    }
   }, [categoryFilter]);
   
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (!news || news.length === 0) return;
+    
     const container = event.currentTarget;
     const scrollPosition = container.scrollTop;
     const itemHeight = container.clientHeight;
-    const newIndex = Math.round(scrollPosition / itemHeight);
     
-    if (newIndex !== activeIndex && news && newIndex < news.length) {
+    // Calculate which news item should be active based on scroll position
+    const newIndex = Math.floor(scrollPosition / itemHeight);
+    
+    if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
       setPreviousIndex(activeIndex);
       setActiveIndex(newIndex);
     }
@@ -86,7 +96,7 @@ const NewsFeed = () => {
           <p className="text-gray-500">Try selecting a different category or insert sample data</p>
           <Button 
             className="mt-4"
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/home')}
           >
             Go to Home
           </Button>
@@ -101,7 +111,11 @@ const NewsFeed = () => {
 
   return (
     <div className="h-screen w-full relative">
-      <ScrollArea className="h-full w-full snap-y snap-mandatory" onScroll={handleScroll}>
+      <ScrollArea 
+        className="h-full w-full snap-y snap-mandatory" 
+        onScroll={handleScroll}
+        ref={scrollContainerRef}
+      >
         <div className="flex flex-col">
           {news.map((newsItem, index) => (
             <div 
@@ -119,7 +133,7 @@ const NewsFeed = () => {
       </ScrollArea>
       
       {/* Scroll indicator */}
-      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
+      <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
         {news.map((_, index) => (
           <div 
             key={index} 

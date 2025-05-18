@@ -6,10 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { newsData } from "../data/mockNewsData";
 import { toast } from "@/components/ui/use-toast";
+import { useLocation } from "react-router-dom";
 
 const NewsFeed = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const categoryFilter = searchParams.get("category") || "all";
+
+  // Filter news based on category
+  const filteredNews = categoryFilter === "all" 
+    ? newsData 
+    : newsData.filter(item => item.category === categoryFilter);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     const container = event.currentTarget;
@@ -17,29 +26,47 @@ const NewsFeed = () => {
     const itemHeight = container.clientHeight;
     const newIndex = Math.round(scrollPosition / itemHeight);
     
-    if (newIndex !== activeIndex) {
+    if (newIndex !== activeIndex && newIndex < filteredNews.length) {
       setPreviousIndex(activeIndex);
       setActiveIndex(newIndex);
     }
   };
 
+  // Reset active index when category changes
+  useEffect(() => {
+    setActiveIndex(0);
+    setPreviousIndex(0);
+  }, [categoryFilter]);
+
   // Announce category change when active news item changes
   useEffect(() => {
-    if (activeIndex !== previousIndex && newsData[activeIndex]) {
-      const category = newsData[activeIndex].category;
+    if (activeIndex !== previousIndex && filteredNews[activeIndex]) {
+      const category = filteredNews[activeIndex].category;
       toast({
         title: `${category.charAt(0).toUpperCase() + category.slice(1)} News`,
         description: "Showing the latest updates from this category",
         duration: 1500,
       });
     }
-  }, [activeIndex, previousIndex]);
+  }, [activeIndex, previousIndex, filteredNews]);
+
+  // Handle empty state
+  if (filteredNews.length === 0) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-2">No news in this category</h2>
+          <p className="text-gray-500">Try selecting a different category</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen w-full relative">
       <ScrollArea className="h-full w-full snap-y snap-mandatory" onScroll={handleScroll}>
         <div className="flex flex-col">
-          {newsData.map((newsItem, index) => (
+          {filteredNews.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
               className="h-screen w-full snap-start snap-always"
@@ -55,7 +82,7 @@ const NewsFeed = () => {
       
       {/* Scroll indicator */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5">
-        {newsData.map((_, index) => (
+        {filteredNews.map((_, index) => (
           <div 
             key={index} 
             className={`w-1.5 h-1.5 rounded-full ${
@@ -91,7 +118,8 @@ const NewsCard = ({ news, isActive }: NewsCardProps) => {
   const [bookmarked, setBookmarked] = useState(false);
   const [likes, setLikes] = useState(news.likes);
   
-  const handleLike = () => {
+  const handleLike = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
     if (liked) {
       setLikes(prev => prev - 1);
     } else {
@@ -100,7 +128,8 @@ const NewsCard = ({ news, isActive }: NewsCardProps) => {
     setLiked(!liked);
   };
   
-  const handleBookmark = () => {
+  const handleBookmark = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
     setBookmarked(!bookmarked);
     toast({
       title: bookmarked ? "Removed from bookmarks" : "Added to bookmarks",
@@ -109,10 +138,20 @@ const NewsCard = ({ news, isActive }: NewsCardProps) => {
     });
   };
   
-  const handleShare = () => {
+  const handleShare = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
     toast({
       title: "Share",
       description: "Sharing functionality would be implemented here",
+      duration: 1500,
+    });
+  };
+
+  const handleComment = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event bubbling
+    toast({
+      title: "Comments",
+      description: "Comments section would open here",
       duration: 1500,
     });
   };
@@ -167,6 +206,7 @@ const NewsCard = ({ news, isActive }: NewsCardProps) => {
             variant="ghost" 
             size="icon" 
             className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-transform hover:scale-110"
+            onClick={handleComment}
           >
             <MessageCircle className="h-5 w-5" />
           </Button>

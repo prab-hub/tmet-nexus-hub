@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -12,6 +12,7 @@ import {
   SidebarTrigger
 } from "@/components/ui/sidebar";
 import { Smartphone, Radio, Film, Laptop, TrendingUp } from "lucide-react";
+import { useNavigate, useLocation } from "react-router-dom";
 
 const categories = [
   {
@@ -42,6 +43,16 @@ const categories = [
 ];
 
 const NewsSidebar = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const activeCategory = searchParams.get("category") || "all";
+
+  const handleCategoryClick = (categoryId: string) => {
+    // Navigate to same route but with category query param
+    navigate(`/?category=${categoryId}`);
+  };
+
   return (
     <Sidebar>
       <div className="pt-4 px-4">
@@ -53,9 +64,20 @@ const NewsSidebar = () => {
           <SidebarGroupLabel>Categories</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
+              <SidebarMenuItem key="all">
+                <SidebarMenuButton 
+                  isActive={activeCategory === "all"}
+                  onClick={() => handleCategoryClick("all")}
+                >
+                  <span>All News</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               {categories.map((category) => (
                 <SidebarMenuItem key={category.id}>
-                  <SidebarMenuButton>
+                  <SidebarMenuButton 
+                    isActive={activeCategory === category.id}
+                    onClick={() => handleCategoryClick(category.id)}
+                  >
                     <category.icon />
                     <span>{category.title}</span>
                   </SidebarMenuButton>

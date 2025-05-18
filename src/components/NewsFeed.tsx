@@ -3,7 +3,6 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type NewsCategory } from "../services/newsService";
 import { useIsMobile } from "../hooks/use-mobile";
-import { toast } from "@/components/ui/use-toast";
 import NewsCard from "./news/NewsCard";
 import NewsScrollIndicator from "./news/NewsScrollIndicator";
 import { NewsEmptyState, NewsLoadingState, NewsErrorState } from "./news/NewsState";
@@ -50,19 +49,8 @@ const NewsFeed = () => {
     }
   };
 
-  // Announce category change when active news item changes
-  useEffect(() => {
-    if (activeIndex !== previousIndex && news && news[activeIndex]) {
-      const categories = news[activeIndex].categories;
-      if (categories && categories.length > 0) {
-        const category = categories[0];
-        toast({
-          title: `${category.charAt(0).toUpperCase() + category.slice(1)} News`,
-          duration: 1500,
-        });
-      }
-    }
-  }, [activeIndex, previousIndex, news]);
+  // Remove the category announcement toast when active news item changes
+  // We've completely removed the useEffect that was announcing category changes
 
   // Handle scroll indicator click
   const handleIndicatorClick = (index: number) => {

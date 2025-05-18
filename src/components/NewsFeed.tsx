@@ -286,17 +286,17 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
   };
 
   // Maximum retries for image loading with multiple attempts
-  const MAX_RETRIES = 5;
+  const MAX_RETRIES = 8; // Increased max retries
   const [retryCount, setRetryCount] = useState(0);
 
   const handleImageError = () => {
     if (retryCount < MAX_RETRIES) {
-      // Try again with a small delay
+      // Try again with a small delay that increases with each retry
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
         // Force re-render the image
         setImageError(false);
-      }, 1000); // Increased delay to give more time for loading
+      }, 1000 + (retryCount * 500)); // Increasing delay with each retry
     } else {
       setImageError(true);
       console.error(`Failed to load image after ${MAX_RETRIES} attempts:`, news.image_url);
@@ -339,7 +339,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
   const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
   
   // Use different aspect ratios for mobile and desktop
-  const aspectRatio = isMobile ? 3/4 : 16/9;
+  const aspectRatio = isMobile ? 1/1.4 : 16/9;
 
   return (
     <Card 
@@ -347,18 +347,31 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
       onClick={handleClick}
     >
       <div className="absolute inset-0">
-        <AspectRatio ratio={aspectRatio} className="h-full w-full">
-          <div className="relative w-full h-full">
+        {isMobile ? (
+          <div className="w-full h-full">
             <img 
               src={imageUrl} 
               alt={news.title}
-              className={`w-full h-full object-cover ${isMobile ? 'object-center' : ''}`}
+              className="w-full h-full object-cover"
               onError={handleImageError}
-              key={`${imageUrl}-${retryCount}`} // Force re-render on retry
+              key={`${imageUrl}-${retryCount}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
           </div>
-        </AspectRatio>
+        ) : (
+          <AspectRatio ratio={aspectRatio} className="h-full w-full">
+            <div className="relative w-full h-full">
+              <img 
+                src={imageUrl} 
+                alt={news.title}
+                className="w-full h-full object-cover"
+                onError={handleImageError}
+                key={`${imageUrl}-${retryCount}`}
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            </div>
+          </AspectRatio>
+        )}
       </div>
       
       {/* Content overlay */}

@@ -1,7 +1,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import NewsLayout from "../components/NewsLayout";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -131,14 +130,14 @@ const ArticleDetail = () => {
   };
 
   const handleImageError = () => {
-    const MAX_RETRIES = 5;
+    const MAX_RETRIES = 8; // Increased max retries
     if (retryCount < MAX_RETRIES) {
-      // Try again with a delay
+      // Try again with a delay that increases with each retry
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
         // Force re-render the image
         setImageError(false);
-      }, 1000);
+      }, 1000 + (retryCount * 500)); // Increasing delay with each retry
     } else {
       setImageError(true);
     }
@@ -170,29 +169,25 @@ const ArticleDetail = () => {
 
   if (loading) {
     return (
-      <NewsLayout>
-        <div className="h-screen w-full flex items-center justify-center">
-          <div className="text-center p-8">
-            <h2 className="text-2xl font-bold mb-2">Loading article...</h2>
-          </div>
+      <div className="h-screen w-full flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-2">Loading article...</h2>
         </div>
-      </NewsLayout>
+      </div>
     );
   }
 
   if (error || !article) {
     return (
-      <NewsLayout>
-        <div className="h-screen w-full flex items-center justify-center">
-          <div className="text-center p-8">
-            <h2 className="text-2xl font-bold mb-2">Error loading article</h2>
-            <p className="text-gray-500">{error}</p>
-            <Button className="mt-4" onClick={handleGoBack}>
-              Go Back
-            </Button>
-          </div>
+      <div className="h-screen w-full flex items-center justify-center">
+        <div className="text-center p-8">
+          <h2 className="text-2xl font-bold mb-2">Error loading article</h2>
+          <p className="text-gray-500">{error}</p>
+          <Button className="mt-4" onClick={handleGoBack}>
+            Go Back
+          </Button>
         </div>
-      </NewsLayout>
+      </div>
     );
   }
 
@@ -213,115 +208,129 @@ const ArticleDetail = () => {
   const imageHeight = isMobile ? "h-80" : "h-96";
   
   return (
-    <NewsLayout>
-      <div className="min-h-screen relative pb-20">
-        {/* Article Header */}
-        <div className={`w-full relative ${imageHeight}`}>
-          <AspectRatio ratio={isMobile ? 4/3 : 16/9} className="h-full w-full">
+    <div className="min-h-screen relative pb-20">
+      {/* Article Header */}
+      <div className={`w-full relative ${imageHeight}`}>
+        {isMobile ? (
+          <div className="w-full h-full">
             <img
               src={imageUrl}
               alt={article.title}
               className="w-full h-full object-cover"
               onError={handleImageError}
-              key={`${imageUrl}-${retryCount}`} // Force re-render on retry
+              key={`${imageUrl}-${retryCount}`}
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+          </div>
+        ) : (
+          <AspectRatio ratio={16/9} className="h-full w-full">
+            <img
+              src={imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover"
+              onError={handleImageError}
+              key={`${imageUrl}-${retryCount}`}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
           </AspectRatio>
-          
-          <Button 
-            variant="ghost" 
-            size="icon"
-            onClick={handleGoBack}
-            className="absolute top-4 left-4 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          
-          <div className="absolute bottom-4 left-4 right-4">
-            <div className="flex items-center mb-2">
-              <img 
-                src={article.source_image_url || 'https://placehold.co/50?text=News'} 
-                alt={article.source || ''} 
-                className="w-8 h-8 rounded-full mr-2 object-cover border border-white/20"
-              />
-              <span className="text-white/90 text-sm font-medium">{article.source || 'Unknown Source'}</span>
-              <span className="text-white/70 text-xs ml-auto">{formatDate(article.news_date)}</span>
-            </div>
-            <h1 className="text-white text-2xl md:text-3xl font-bold">{article.title}</h1>
+        )}
+        
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={handleGoBack}
+          className="absolute top-4 left-4 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        
+        <div className="absolute bottom-4 left-4 right-4">
+          <div className="flex items-center mb-2">
+            <img 
+              src={article.source_image_url || 'https://placehold.co/50?text=News'} 
+              alt={article.source || ''} 
+              className="w-8 h-8 rounded-full mr-2 object-cover border border-white/20"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
+              }}
+            />
+            <span className="text-white/90 text-sm font-medium">{article.source || 'Unknown Source'}</span>
+            <span className="text-white/70 text-xs ml-auto">{formatDate(article.news_date)}</span>
           </div>
+          <h1 className="text-white text-2xl md:text-3xl font-bold">{article.title}</h1>
         </div>
+      </div>
 
-        {/* Article Content */}
-        <div className="px-4 py-6">
-          <div className="flex flex-wrap gap-2 mb-4">
-            {article.categories && article.categories.map((category) => (
-              <Badge key={category} className="bg-primary/20 text-primary">
-                {category}
-              </Badge>
-            ))}
-            {article.tags && article.tags.map((tag) => (
-              <Badge key={tag} variant="secondary" className="bg-secondary/20 text-secondary">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-          
-          <p className="text-lg font-medium mb-6">{article.summary}</p>
-          
-          <div className="prose max-w-none">
-            {article.content ? (
-              <div dangerouslySetInnerHTML={{ __html: article.content }} />
-            ) : (
-              <p className="text-gray-500">
-                This is a placeholder for the full article content. In a real application, 
-                this would display the complete article text with proper formatting.
-              </p>
-            )}
-          </div>
+      {/* Article Content */}
+      <div className="px-4 py-6">
+        <div className="flex flex-wrap gap-2 mb-4">
+          {article.categories && article.categories.map((category) => (
+            <Badge key={category} className="bg-primary/20 text-primary">
+              {category}
+            </Badge>
+          ))}
+          {article.tags && article.tags.map((tag) => (
+            <Badge key={tag} variant="secondary" className="bg-secondary/20 text-secondary">
+              {tag}
+            </Badge>
+          ))}
         </div>
+        
+        <p className="text-lg font-medium mb-6">{article.summary}</p>
+        
+        <div className="prose max-w-none">
+          {article.content ? (
+            <div dangerouslySetInnerHTML={{ __html: article.content }} />
+          ) : (
+            <p className="text-gray-500">
+              This is a placeholder for the full article content. In a real application, 
+              this would display the complete article text with proper formatting.
+            </p>
+          )}
+        </div>
+      </div>
 
-        {/* Action buttons */}
-        <div className="fixed bottom-20 right-4 flex flex-col items-center space-y-6">
-          <div className="flex flex-col items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className={`rounded-full bg-black/30 backdrop-blur-sm border border-white/10 ${liked ? 'text-red-500' : 'text-white'} transition-transform hover:scale-110`}
-              onClick={handleLike}
-            >
-              <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
-            </Button>
-            <span className="text-xs mt-1">{article.likes_count}</span>
-          </div>
-          <div className="flex flex-col items-center">
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-transform hover:scale-110"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </Button>
-            <span className="text-xs mt-1">{article.comments_count || 0}</span>
-          </div>
+      {/* Action buttons */}
+      <div className="fixed bottom-20 right-4 flex flex-col items-center space-y-6">
+        <div className="flex flex-col items-center">
           <Button 
             variant="ghost" 
             size="icon" 
-            className={`rounded-full bg-black/30 backdrop-blur-sm border border-white/10 ${bookmarked ? 'text-yellow-500' : 'text-white'} transition-transform hover:scale-110`}
-            onClick={handleBookmark}
+            className={`rounded-full bg-black/30 backdrop-blur-sm border border-white/10 ${liked ? 'text-red-500' : 'text-white'} transition-transform hover:scale-110`}
+            onClick={handleLike}
           >
-            <Bookmark className="h-5 w-5" fill={bookmarked ? "currentColor" : "none"} />
+            <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
           </Button>
+          <span className="text-xs mt-1">{article.likes_count}</span>
+        </div>
+        <div className="flex flex-col items-center">
           <Button 
             variant="ghost" 
             size="icon" 
             className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-transform hover:scale-110"
-            onClick={handleShare}
           >
-            <Share2 className="h-5 w-5" />
+            <MessageCircle className="h-5 w-5" />
           </Button>
+          <span className="text-xs mt-1">{article.comments_count || 0}</span>
         </div>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className={`rounded-full bg-black/30 backdrop-blur-sm border border-white/10 ${bookmarked ? 'text-yellow-500' : 'text-white'} transition-transform hover:scale-110`}
+          onClick={handleBookmark}
+        >
+          <Bookmark className="h-5 w-5" fill={bookmarked ? "currentColor" : "none"} />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white transition-transform hover:scale-110"
+          onClick={handleShare}
+        >
+          <Share2 className="h-5 w-5" />
+        </Button>
       </div>
-    </NewsLayout>
+    </div>
   );
 };
 

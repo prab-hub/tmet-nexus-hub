@@ -8,6 +8,19 @@ type NewsInsert = NewsTables["Insert"];
 
 export async function insertSampleNews() {
   try {
+    // First check if data already exists
+    const { count } = await supabase
+      .from('news')
+      .select('*', { count: 'exact', head: true });
+    
+    if (count && count > 0) {
+      toast({
+        title: "Data Already Exists",
+        description: "Sample news data has already been inserted.",
+      });
+      return true;
+    }
+    
     const sampleNews: NewsInsert[] = [
       // Tech News
       {
@@ -139,18 +152,50 @@ export async function insertSampleNews() {
       }
     ];
 
-    const { error } = await supabase
+    // Insert the news data
+    const { error: newsError } = await supabase
       .from('news')
       .insert(sampleNews);
 
-    if (error) {
-      console.error("Error inserting sample news:", error);
+    if (newsError) {
+      console.error("Error inserting sample news:", newsError);
       toast({
         title: "Error",
-        description: "Failed to insert sample news data: " + error.message,
+        description: "Failed to insert sample news data: " + newsError.message,
         variant: "destructive"
       });
       return false;
+    }
+    
+    // Create test profile users (this will help with testing user interactions)
+    const testProfiles = [
+      {
+        id: '11111111-1111-1111-1111-111111111111', 
+        username: 'techfan', 
+        full_name: 'Alex Johnson', 
+        avatar_url: 'https://placehold.co/150/87CEEB/FFF?text=AJ'
+      },
+      {
+        id: '22222222-2222-2222-2222-222222222222', 
+        username: 'mediaexpert', 
+        full_name: 'Jamie Smith', 
+        avatar_url: 'https://placehold.co/150/FFB6C1/FFF?text=JS'
+      },
+      {
+        id: '33333333-3333-3333-3333-333333333333', 
+        username: 'newsjunkie', 
+        full_name: 'Sam Wilson', 
+        avatar_url: 'https://placehold.co/150/98FB98/FFF?text=SW'
+      }
+    ];
+    
+    const { error: profilesError } = await supabase
+      .from('profiles')
+      .upsert(testProfiles, { onConflict: 'id' });
+    
+    if (profilesError) {
+      console.error("Error inserting sample profiles:", profilesError);
+      // Continue with other inserts - profiles aren't critical
     }
 
     toast({

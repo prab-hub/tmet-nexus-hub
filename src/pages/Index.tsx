@@ -4,10 +4,31 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { insertSampleNews } from "@/services/sampleDataService";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
 const Index = () => {
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
   const handleInsertSampleData = async () => {
-    await insertSampleNews();
+    try {
+      await insertSampleNews();
+      toast({
+        title: "Success",
+        description: "Sample news data has been inserted. View it in the news feed.",
+        duration: 5000,
+      });
+      navigate("/");
+    } catch (error) {
+      console.error("Error inserting sample data:", error);
+      toast({
+        title: "Error",
+        description: "Failed to insert sample data. Please try again.",
+        variant: "destructive",
+        duration: 5000,
+      });
+    }
   };
 
   return (

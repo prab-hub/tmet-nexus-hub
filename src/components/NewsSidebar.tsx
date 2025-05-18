@@ -63,7 +63,7 @@ const NewsSidebar = () => {
     <Sidebar>
       <div className="pt-4 px-4">
         <SidebarTrigger className="mb-4" />
-        <h1 className="text-xl font-bold mb-2">TMET News</h1>
+        <h1 className="text-xl font-bold mb-2">TMET Hub</h1>
       </div>
       <SidebarContent>
         <SidebarGroup>

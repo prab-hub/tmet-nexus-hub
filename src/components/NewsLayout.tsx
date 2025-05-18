@@ -5,7 +5,7 @@ import NewsSidebar from "./NewsSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import { UserCircle, LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 
 interface NewsLayoutProps {

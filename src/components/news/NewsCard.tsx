@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -33,6 +34,9 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
     e.stopPropagation(); // Prevent event bubbling
 
     if (!isAuthenticated) {
+      // Redirect to auth page with the current path as redirect destination
+      navigate('/auth', { state: { from: location.pathname + location.search } });
+      
       toast({
         title: "Authentication required",
         description: "Please sign in to like articles",
@@ -70,6 +74,9 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
     e.stopPropagation(); // Prevent event bubbling
 
     if (!isAuthenticated) {
+      // Redirect to auth page with the current path as redirect destination
+      navigate('/auth', { state: { from: location.pathname + location.search } });
+      
       toast({
         title: "Authentication required",
         description: "Please sign in to bookmark articles",
@@ -122,6 +129,19 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
 
   const handleComment = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
+    
+    if (!isAuthenticated) {
+      // Redirect to auth page with the current path as redirect destination
+      navigate('/auth', { state: { from: location.pathname + location.search } });
+      
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to comment on articles",
+        duration: 3000,
+      });
+      return;
+    }
+    
     toast({
       title: "Comments",
       description: "Comments section would open here",

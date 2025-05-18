@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../services/authService";
 
 const Auth = () => {
@@ -15,13 +15,17 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if there's a redirect URL in the state
+  const from = location.state?.from || "/";
   
   useEffect(() => {
-    // Redirect to home if user is already authenticated
+    // Redirect to previous page if user is already authenticated
     if (isAuthenticated) {
-      navigate("/");
+      navigate(from);
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, from]);
   
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,7 +46,8 @@ const Auth = () => {
         });
       }
       
-      navigate("/");
+      // Redirect back to the page they came from
+      navigate(from);
     } catch (error) {
       let errorMessage = "An unexpected error occurred";
       if (error instanceof Error) {
@@ -63,11 +68,13 @@ const Auth = () => {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 to-black p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <CardTitle className="text-2xl">{isLogin ? "Sign In" : "Create Account"}</CardTitle>
+          <CardTitle className="text-2xl">
+            {isLogin ? "Sign In to TMET Hub" : "Join TMET Hub"}
+          </CardTitle>
           <CardDescription>
             {isLogin 
-              ? "Enter your credentials to access your account" 
-              : "Fill out the form to create your account"}
+              ? "Sign in to like and comment on articles" 
+              : "Create an account to like and comment on articles"}
           </CardDescription>
         </CardHeader>
         <CardContent>

@@ -58,7 +58,6 @@ const NewsFeed = () => {
         const category = categories[0];
         toast({
           title: `${category.charAt(0).toUpperCase() + category.slice(1)} News`,
-          description: "Showing the latest updates from this category",
           duration: 1500,
         });
       }

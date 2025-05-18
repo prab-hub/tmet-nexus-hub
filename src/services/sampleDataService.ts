@@ -109,7 +109,7 @@ export async function insertSampleNews() {
         source_image_url: "https://placehold.co/50?text=BB",
         image_url: "https://placehold.co/1200x800?text=Gaming+Revenue",
         categories: ["entertainment"],
-        tags: ["industry", "gaming"],
+        tags: ["new tech", "earnings"],
         news_date: new Date(Date.now() - 4 * 86400000).toISOString(), // 4 days ago
         likes_count: 378,
         comments_count: 92,
@@ -123,7 +123,7 @@ export async function insertSampleNews() {
         source_image_url: "https://placehold.co/50?text=IEEE",
         image_url: "https://placehold.co/1200x800?text=6G+Standards",
         categories: ["telecom", "technology"],
-        tags: ["new tech", "industry"],
+        tags: ["new tech", "regulation"],
         news_date: new Date(Date.now() - 5 * 86400000).toISOString(), // 5 days ago
         likes_count: 253,
         comments_count: 87,
@@ -137,7 +137,7 @@ export async function insertSampleNews() {
         source_image_url: "https://placehold.co/50?text=FT",
         image_url: "https://placehold.co/1200x800?text=EU+Streaming",
         categories: ["media", "trending"],
-        tags: ["regulation", "streaming"],
+        tags: ["regulation", "opinion"],
         news_date: new Date(Date.now() - 6 * 86400000).toISOString(), // 6 days ago
         likes_count: 198,
         comments_count: 76,

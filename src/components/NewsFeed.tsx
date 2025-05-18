@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
@@ -10,6 +9,8 @@ import { useNews, type News, type NewsCategory } from "../services/newsService";
 import { useAuth } from "../services/authService";
 import { Badge } from "@/components/ui/badge";
 import { useQueryClient } from "@tanstack/react-query";
+import { useIsMobile } from "../hooks/use-mobile";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 const NewsFeed = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -20,6 +21,7 @@ const NewsFeed = () => {
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const categoryFilter = (searchParams.get("category") || "all") as NewsCategory | 'all';
+  const isMobile = useIsMobile();
   
   // Initialize the queryClient to make sure it's available
   const queryClient = useQueryClient();
@@ -114,10 +116,13 @@ const NewsFeed = () => {
     navigate(`/article/${newsId}`);
   };
 
+  // Adjust top padding based on whether we're on mobile (for the selector)
+  const topPaddingClass = isMobile ? "pt-16" : "";
+
   return (
-    <div className="h-screen w-full relative overflow-hidden">
+    <div className={`h-screen w-full relative overflow-hidden ${topPaddingClass}`}>
       <div 
-        className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide" 
+        className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide snap-y snap-mandatory" 
         onScroll={handleScroll}
         ref={scrollContainerRef}
       >
@@ -132,6 +137,7 @@ const NewsFeed = () => {
                 news={newsItem} 
                 isActive={index === activeIndex}
                 onViewArticle={handleViewArticle}
+                isMobile={isMobile}
               />
             </div>
           ))}
@@ -164,12 +170,14 @@ interface NewsCardProps {
   news: News;
   isActive: boolean;
   onViewArticle: (id: string) => void;
+  isMobile: boolean;
 }
 
-const NewsCard = ({ news, isActive, onViewArticle }: NewsCardProps) => {
+const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) => {
   const [liked, setLiked] = useState(false);
   const [bookmarked, setBookmarked] = useState(false);
   const [likes, setLikes] = useState(news.likes_count || 0);
+  const [imageError, setImageError] = useState(false);
   const { user, isAuthenticated } = useAuth();
   
   const handleClick = () => {
@@ -277,6 +285,10 @@ const NewsCard = ({ news, isActive, onViewArticle }: NewsCardProps) => {
     });
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   const formatDate = (dateString: string) => {
     try {
       const date = new Date(dateString);
@@ -290,34 +302,60 @@ const NewsCard = ({ news, isActive, onViewArticle }: NewsCardProps) => {
     }
   };
 
+  // Get a backup image based on the category
+  const getBackupImage = () => {
+    const category = news.categories && news.categories[0] ? news.categories[0] : 'default';
+    switch(category) {
+      case 'technology': 
+        return 'https://images.unsplash.com/photo-1518770660439-4636190af475';
+      case 'telecom':
+        return 'https://images.unsplash.com/photo-1546027658-7aa750153465';
+      case 'media':
+        return 'https://images.unsplash.com/photo-1626812754718-79351472df4f';
+      case 'entertainment':
+        return 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852';
+      case 'trending':
+        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f';
+      default:
+        return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c';
+    }
+  };
+
+  const imageUrl = imageError || !news.image_url ? getBackupImage() : news.image_url;
+
   return (
     <Card 
       className={`h-full w-full overflow-hidden relative rounded-none border-0 transition-opacity duration-300 cursor-pointer ${isActive ? 'opacity-100' : 'opacity-0'}`}
       onClick={handleClick}
     >
-      <div 
-        className="absolute inset-0 bg-center bg-cover transition-transform duration-700"
-        style={{ 
-          backgroundImage: `url(${news.image_url || 'https://placehold.co/600x400?text=No+Image'})`,
-          transform: isActive ? 'scale(1)' : 'scale(1.05)',
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+      <div className="absolute inset-0">
+        <AspectRatio ratio={isMobile ? 9/16 : 16/9} className="h-full w-full">
+          <img 
+            src={imageUrl} 
+            alt={news.title}
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        </AspectRatio>
       </div>
       
       {/* Content overlay */}
       <div className={`absolute inset-0 flex flex-col justify-end p-6 transition-transform duration-500 ${isActive ? 'translate-y-0' : 'translate-y-10'}`}>
-        <div className="mb-16">
+        <div className={`mb-16 ${isMobile ? 'mt-auto' : ''}`}>
           <div className="flex items-center mb-4">
             <img 
-              src={news.source_image_url || 'https://placehold.co/50?text=News'} 
+              src={news.source_image_url || getBackupImage()} 
               alt={news.source || ''} 
               className="w-8 h-8 rounded-full mr-2 object-cover border border-white/20"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
+              }}
             />
             <span className="text-white/90 text-sm font-medium">{news.source || 'Unknown Source'}</span>
             <span className="text-white/70 text-xs ml-auto">{formatDate(news.news_date)}</span>
           </div>
-          <h2 className="text-white text-2xl font-bold mb-2">{news.title}</h2>
+          <h2 className={`text-white font-bold mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>{news.title}</h2>
           <p className="text-white/80 line-clamp-3">{news.summary || ''}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {news.categories && news.categories.map((category) => (
@@ -335,7 +373,7 @@ const NewsCard = ({ news, isActive, onViewArticle }: NewsCardProps) => {
       </div>
 
       {/* Action buttons */}
-      <div className={`absolute right-4 bottom-20 flex flex-col items-center space-y-6 transition-transform duration-500 ${isActive ? 'translate-x-0' : 'translate-x-16'}`}>
+      <div className={`absolute ${isMobile ? 'right-4 bottom-20' : 'right-4 bottom-20'} flex flex-col items-center space-y-6 transition-transform duration-500 ${isActive ? 'translate-x-0' : 'translate-x-16'}`}>
         <div className="flex flex-col items-center">
           <Button 
             variant="ghost" 

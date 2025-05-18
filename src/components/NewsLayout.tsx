@@ -15,7 +15,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
 
 interface NewsLayoutProps {
   children: React.ReactNode;
@@ -24,6 +25,34 @@ interface NewsLayoutProps {
 const NewsLayout = ({ children }: NewsLayoutProps) => {
   const { user, signOut, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const [userProfile, setUserProfile] = React.useState<{username?: string, avatar_url?: string} | null>(null);
+  
+  React.useEffect(() => {
+    if (user) {
+      fetchUserProfile(user.id);
+    }
+  }, [user]);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+      
+      if (data) {
+        setUserProfile(data);
+      }
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error);
+    }
+  };
   
   const handleLogin = () => {
     navigate("/auth", { state: { from: location.pathname + location.search } });
@@ -32,6 +61,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
   const handleLogout = async () => {
     try {
       await signOut();
+      setUserProfile(null);
       toast({
         title: "Signed out",
         description: "You have been signed out successfully",
@@ -49,7 +79,10 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
     navigate("/profile");
   };
   
-  const getInitials = (email?: string) => {
+  const getInitials = (email?: string, username?: string) => {
+    if (username) {
+      return username.substring(0, 2).toUpperCase();
+    }
     if (!email) return "U";
     return email.substring(0, 2).toUpperCase();
   };
@@ -69,14 +102,18 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                     className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
                   >
                     <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-transparent text-white text-sm">
-                        {getInitials(user?.email)}
-                      </AvatarFallback>
+                      {userProfile?.avatar_url ? (
+                        <AvatarImage src={userProfile.avatar_url} />
+                      ) : (
+                        <AvatarFallback className="bg-transparent text-white text-sm">
+                          {getInitials(user?.email, userProfile?.username)}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                  <DropdownMenuLabel>{userProfile?.username || user?.email}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={goToProfile}>
                     <User className="h-4 w-4 mr-2" /> Profile

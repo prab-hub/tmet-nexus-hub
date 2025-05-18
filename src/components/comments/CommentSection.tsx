@@ -14,6 +14,7 @@ import {
   updateComment,
   type CommentType 
 } from "../../services/commentService";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CommentSectionProps {
   newsId: string;
@@ -28,16 +29,48 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
   const [editContent, setEditContent] = useState("");
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
+  const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
 
   useEffect(() => {
     loadComments();
-  }, [newsId]);
+    if (user) {
+      fetchUserProfile(user.id);
+    }
+  }, [newsId, user]);
+
+  const fetchUserProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('username, avatar_url')
+        .eq('id', userId)
+        .single();
+      
+      if (error) {
+        console.error("Error fetching user profile:", error);
+        return;
+      }
+      
+      if (data) {
+        setUserProfiles(prev => ({
+          ...prev,
+          [userId]: data
+        }));
+      }
+    } catch (error) {
+      console.error("Error in fetchUserProfile:", error);
+    }
+  };
 
   const loadComments = async () => {
     try {
       setLoading(true);
       const fetchedComments = await fetchComments(newsId);
       setComments(fetchedComments);
+      
+      // Fetch profiles for all unique user IDs in comments
+      const userIds = Array.from(new Set(fetchedComments.map(comment => comment.user_id)));
+      await Promise.all(userIds.map(userId => fetchUserProfile(userId)));
     } catch (error) {
       toast({
         title: "Error",
@@ -72,7 +105,12 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
       
       // Optimistic UI update
       if (comment) {
-        setComments(prevComments => [comment, ...prevComments]);
+        // If we have profile data in our local state, use it
+        const updatedComment = {
+          ...comment,
+          profile: userProfiles[user.id] || comment.profile
+        };
+        setComments(prevComments => [updatedComment, ...prevComments]);
       }
       
       setNewComment("");
@@ -169,14 +207,41 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
 
   // Function to format the display name
   const getDisplayName = (comment: CommentType) => {
+    // First check if we have the user profile in our local state
+    if (userProfiles[comment.user_id]?.username) {
+      return userProfiles[comment.user_id].username;
+    }
+    
+    // Then check if the comment has profile data
     if (comment.profile && comment.profile.username) {
       return comment.profile.username;
     }
+    
+    // If user is viewing their own comment but username isn't set
+    if (user && user.id === comment.user_id && user.email) {
+      return user.email.split('@')[0];
+    }
+    
     return "Anonymous User";
   };
 
   const getInitials = (name: string) => {
     return name.substring(0, 2).toUpperCase();
+  };
+
+  // Get avatar URL
+  const getAvatarUrl = (comment: CommentType) => {
+    // First check if we have the user profile in our local state
+    if (userProfiles[comment.user_id]?.avatar_url) {
+      return userProfiles[comment.user_id].avatar_url;
+    }
+    
+    // Then check if the comment has profile data
+    if (comment.profile && comment.profile.avatar_url) {
+      return comment.profile.avatar_url;
+    }
+    
+    return null;
   };
 
   // Group comments by parent_id to easily find replies
@@ -205,6 +270,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
   const renderComment = (comment: CommentType, level = 0) => {
     const isAuthor = user && user.id === comment.user_id;
     const replies = commentsByParent[comment.id] || [];
+    const displayName = getDisplayName(comment);
+    const avatarUrl = getAvatarUrl(comment);
     
     // Sort replies by created_at (oldest first)
     replies.sort((a, b) => 
@@ -215,15 +282,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
       <div key={comment.id} className={`mb-4 ${level > 0 ? 'pl-6 border-l border-gray-200' : ''}`}>
         <div className="flex items-start">
           <Avatar className="h-8 w-8 mr-3">
-            {comment.profile?.avatar_url ? (
-              <AvatarImage src={comment.profile.avatar_url} alt={getDisplayName(comment)} />
+            {avatarUrl ? (
+              <AvatarImage src={avatarUrl} alt={displayName} />
             ) : (
-              <AvatarFallback>{getInitials(getDisplayName(comment))}</AvatarFallback>
+              <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
             )}
           </Avatar>
           <div className="flex-1">
             <div className="flex justify-between items-center mb-1">
-              <span className="text-sm font-medium">{getDisplayName(comment)}</span>
+              <span className="text-sm font-medium">{displayName}</span>
               <span className="text-xs text-gray-500">
                 {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
                 {comment.updated_at !== comment.created_at && " (edited)"}
@@ -334,7 +401,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
       {isAuthenticated ? (
         <div className="flex gap-3 mb-6">
           <Avatar className="h-8 w-8">
-            <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            {userProfiles[user?.id]?.avatar_url ? (
+              <AvatarImage src={userProfiles[user.id].avatar_url} />
+            ) : (
+              <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase()}</AvatarFallback>
+            )}
           </Avatar>
           <div className="flex-1 flex gap-2">
             <Textarea

@@ -41,6 +41,7 @@ const ArticleDetail = () => {
   const [commentsOpen, setCommentsOpen] = useState<boolean>(false);
   const [authDialogOpen, setAuthDialogOpen] = useState(false);
   const [authAction, setAuthAction] = useState<'like' | 'comment' | 'bookmark' | 'share'>('like');
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const isMobile = useIsMobile();
   
   // Check if comments should be opened from URL parameter
@@ -175,7 +176,34 @@ const ArticleDetail = () => {
         // Create shareable URL
         const shareUrl = window.location.href;
         
-        // Use navigator.share if available (mobile devices primarily)
+        // Create a modal or dropdown for share options
+        const shareOptions = [
+          { name: 'Copy Link', action: async () => {
+            await navigator.clipboard.writeText(shareUrl);
+            toast({
+              title: "Link copied",
+              description: "Article link copied to clipboard",
+              duration: 1500,
+            });
+          }},
+          { name: 'X / Twitter', action: () => {
+            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+          }},
+          { name: 'Facebook', action: () => {
+            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
+          }},
+          { name: 'LinkedIn', action: () => {
+            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
+          }},
+          { name: 'WhatsApp', action: () => {
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(article?.title || '')} ${encodeURIComponent(shareUrl)}`, '_blank');
+          }},
+          { name: 'Telegram', action: () => {
+            window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+          }}
+        ];
+        
+        // Use native share if available
         if (navigator.share) {
           await navigator.share({
             title: article?.title || 'TMET Hub Article',
@@ -196,24 +224,29 @@ const ArticleDetail = () => {
               console.error("Failed to track share:", error);
             }
           }
-        } else {
-          // Fallback for desktop browsers
-          await navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied",
-            description: "Article link copied to clipboard",
-            duration: 1500,
-          });
-          
-          // Track share via copy to clipboard
-          if (article && user) {
-            try {
-              await shareNews(article.id, user.id);
-            } catch (error) {
-              console.error("Failed to track share:", error);
-            }
+          return;
+        }
+        
+        // Fallback to our custom share UI - let's use copy link as default
+        await navigator.clipboard.writeText(shareUrl);
+        
+        // Create a popup with more share options
+        setShareModalOpen(true);
+        
+        // Track share via copy to clipboard
+        if (article && user) {
+          try {
+            await shareNews(article.id, user.id);
+          } catch (error) {
+            console.error("Failed to track share:", error);
           }
         }
+        
+        toast({
+          title: "Link copied",
+          description: "Article link copied to clipboard. Choose a platform to share to.",
+          duration: 1500,
+        });
       } catch (err) {
         if ((err as Error).name !== 'AbortError') {
           toast({
@@ -475,6 +508,96 @@ const ArticleDetail = () => {
             </div>
           </div>
         )
+      )}
+      
+      {/* Share Options Modal */}
+      {shareModalOpen && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center" onClick={() => setShareModalOpen(false)}>
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4" onClick={e => e.stopPropagation()}>
+            <h3 className="text-lg font-medium mb-4">Share this article</h3>
+            <div className="grid grid-cols-3 gap-4">
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast({ title: "Link copied", duration: 1500 });
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                </div>
+                <span className="text-xs">Copy Link</span>
+              </button>
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-[#1DA1F2] text-white rounded-full mb-2">X</div>
+                <span className="text-xs">Twitter</span>
+              </button>
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-[#1877F2] text-white rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                </div>
+                <span className="text-xs">Facebook</span>
+              </button>
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank');
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-[#0A66C2] text-white rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect width="4" height="12" x="2" y="9"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                </div>
+                <span className="text-xs">LinkedIn</span>
+              </button>
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(article?.title || '')} ${encodeURIComponent(window.location.href)}`, '_blank');
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-[#25D366] text-white rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </div>
+                <span className="text-xs">WhatsApp</span>
+              </button>
+              <button 
+                className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
+                onClick={() => {
+                  window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+                  setShareModalOpen(false);
+                }}
+              >
+                <div className="w-10 h-10 flex items-center justify-center bg-[#0088cc] text-white rounded-full mb-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.2 8.4c.5.38.8.96.8 1.6v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3h14c.64 0 1.22.3 1.6.78"></path><path d="M3 9l9 6l9-6"></path></svg>
+                </div>
+                <span className="text-xs">Telegram</span>
+              </button>
+            </div>
+            <div className="mt-4 flex justify-end">
+              <Button 
+                variant="outline" 
+                onClick={() => setShareModalOpen(false)}
+              >
+                Close
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

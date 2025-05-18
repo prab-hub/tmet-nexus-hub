@@ -29,7 +29,7 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
       .from('comments')
       .select(`
         *,
-        profiles:user_id(username, avatar_url)
+        profile:profiles(username, avatar_url)
       `)
       .eq('news_id', newsId)
       .order('created_at', { ascending: false });
@@ -70,7 +70,7 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
       .insert([comment])
       .select(`
         *,
-        profiles:user_id(username, avatar_url)
+        profile:profiles(username, avatar_url)
       `)
       .single();
     

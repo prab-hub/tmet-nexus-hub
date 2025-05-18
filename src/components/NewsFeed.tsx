@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -338,17 +337,110 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
   // Always prioritize the original image URL first, then fallback if there's an error
   const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
   
-  // Use different aspect ratios for mobile and desktop
-  const aspectRatio = isMobile ? 1/1.4 : 16/9;
-
+  // Instagram-style layout for mobile, keeping the existing desktop layout
+  if (isMobile) {
+    return (
+      <Card 
+        className={`h-full w-full overflow-hidden relative rounded-none border-0 transition-opacity duration-300 cursor-pointer flex flex-col ${isActive ? 'opacity-100' : 'opacity-0'}`}
+        onClick={handleClick}
+      >
+        {/* Instagram-style image section - fixed height */}
+        <div className="w-full h-[60vh] relative">
+          <img 
+            src={imageUrl} 
+            alt={news.title}
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+            key={`${imageUrl}-${retryCount}`}
+          />
+        </div>
+        
+        {/* Content section - scrollable if needed */}
+        <div className="flex-1 flex flex-col bg-background p-4">
+          <div className="flex items-center mb-3">
+            <img 
+              src={news.source_image_url || 'https://placehold.co/50?text=News'} 
+              alt={news.source || ''} 
+              className="w-8 h-8 rounded-full mr-2 object-cover border border-gray-200"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
+              }}
+            />
+            <span className="text-foreground font-medium">{news.source || 'Unknown Source'}</span>
+            <span className="text-muted-foreground text-xs ml-auto">{formatDate(news.news_date)}</span>
+          </div>
+          
+          <h2 className="text-xl font-bold mb-2">{news.title}</h2>
+          <p className="text-muted-foreground mb-3 line-clamp-2">{news.summary || ''}</p>
+          
+          <div className="flex flex-wrap gap-2 mb-3">
+            {news.categories && news.categories.map((category) => (
+              <Badge key={category} variant="outline" className="bg-primary/10 text-primary">
+                {category}
+              </Badge>
+            ))}
+            {news.tags && news.tags.map((tag) => (
+              <Badge key={tag} variant="outline" className="bg-secondary/10 text-secondary">
+                {tag}
+              </Badge>
+            ))}
+          </div>
+          
+          {/* Action buttons in a row for mobile */}
+          <div className="flex justify-between items-center mt-auto pt-3 border-t border-border">
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`p-2 ${liked ? 'text-red-500' : 'text-muted-foreground'}`}
+                onClick={handleLike}
+              >
+                <Heart className="h-5 w-5 mr-1" fill={liked ? "currentColor" : "none"} />
+                <span>{likes}</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 text-muted-foreground"
+                onClick={handleComment}
+              >
+                <MessageCircle className="h-5 w-5 mr-1" />
+                <span>{news.comments_count || 0}</span>
+              </Button>
+            </div>
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className={`p-2 ${bookmarked ? 'text-yellow-500' : 'text-muted-foreground'}`}
+                onClick={handleBookmark}
+              >
+                <Bookmark className="h-5 w-5" fill={bookmarked ? "currentColor" : "none"} />
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="p-2 text-muted-foreground"
+                onClick={handleShare}
+              >
+                <Share2 className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+    );
+  }
+  
+  // Desktop version - keep the existing layout
   return (
     <Card 
       className={`h-full w-full overflow-hidden relative rounded-none border-0 transition-opacity duration-300 cursor-pointer ${isActive ? 'opacity-100' : 'opacity-0'}`}
       onClick={handleClick}
     >
       <div className="absolute inset-0">
-        {isMobile ? (
-          <div className="w-full h-full">
+        <AspectRatio ratio={16/9} className="h-full w-full">
+          <div className="relative w-full h-full">
             <img 
               src={imageUrl} 
               alt={news.title}
@@ -356,27 +448,14 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
               onError={handleImageError}
               key={`${imageUrl}-${retryCount}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
           </div>
-        ) : (
-          <AspectRatio ratio={aspectRatio} className="h-full w-full">
-            <div className="relative w-full h-full">
-              <img 
-                src={imageUrl} 
-                alt={news.title}
-                className="w-full h-full object-cover"
-                onError={handleImageError}
-                key={`${imageUrl}-${retryCount}`}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
-            </div>
-          </AspectRatio>
-        )}
+        </AspectRatio>
       </div>
       
       {/* Content overlay */}
       <div className={`absolute inset-0 flex flex-col justify-end p-6 transition-transform duration-500 ${isActive ? 'translate-y-0' : 'translate-y-10'}`}>
-        <div className={`mb-16 ${isMobile ? 'mt-auto' : ''}`}>
+        <div className="mb-16">
           <div className="flex items-center mb-4">
             <img 
               src={news.source_image_url || getBackupImage()} 
@@ -389,7 +468,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
             <span className="text-white/90 text-sm font-medium">{news.source || 'Unknown Source'}</span>
             <span className="text-white/70 text-xs ml-auto">{formatDate(news.news_date)}</span>
           </div>
-          <h2 className={`text-white font-bold mb-2 ${isMobile ? 'text-xl' : 'text-2xl'}`}>{news.title}</h2>
+          <h2 className="text-white font-bold mb-2 text-2xl">{news.title}</h2>
           <p className="text-white/80 line-clamp-3">{news.summary || ''}</p>
           <div className="mt-4 flex flex-wrap gap-2">
             {news.categories && news.categories.map((category) => (
@@ -407,7 +486,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
       </div>
 
       {/* Action buttons */}
-      <div className={`absolute ${isMobile ? 'right-4 bottom-20' : 'right-4 bottom-20'} flex flex-col items-center space-y-6 transition-transform duration-500 ${isActive ? 'translate-x-0' : 'translate-x-16'}`}>
+      <div className="absolute right-4 bottom-20 flex flex-col items-center space-y-6 transition-transform duration-500 ${isActive ? 'translate-x-0' : 'translate-x-16'}">
         <div className="flex flex-col items-center">
           <Button 
             variant="ghost" 

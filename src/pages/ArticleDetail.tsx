@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -57,14 +56,12 @@ const ArticleDetail = () => {
       return;
     }
 
-    // Optimistic UI update
     setLiked(!liked);
     
     if (user && article) {
       try {
         await likeNews(article.id, user.id);
       } catch (error) {
-        // Revert optimistic update on error
         setLiked(liked);
         toast({
           title: "Error",
@@ -85,7 +82,6 @@ const ArticleDetail = () => {
       return;
     }
 
-    // Optimistic UI update
     setBookmarked(!bookmarked);
     
     toast({
@@ -98,7 +94,6 @@ const ArticleDetail = () => {
       try {
         await bookmarkNews(article.id, user.id);
       } catch (error) {
-        // Revert optimistic update on error
         setBookmarked(bookmarked);
         toast({
           title: "Error",
@@ -130,20 +125,17 @@ const ArticleDetail = () => {
   };
 
   const handleImageError = () => {
-    const MAX_RETRIES = 8; // Increased max retries
+    const MAX_RETRIES = 8;
     if (retryCount < MAX_RETRIES) {
-      // Try again with a delay that increases with each retry
       setTimeout(() => {
         setRetryCount(prev => prev + 1);
-        // Force re-render the image
         setImageError(false);
-      }, 1000 + (retryCount * 500)); // Increasing delay with each retry
+      }, 1000 + (retryCount * 500));
     } else {
       setImageError(true);
     }
   };
 
-  // Get a backup image based on the category
   const getBackupImage = () => {
     if (!article) return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
     
@@ -164,7 +156,6 @@ const ArticleDetail = () => {
     }
   };
 
-  // Always prioritize the original image URL first, then fallback if there's an error
   const imageUrl = imageError ? getBackupImage() : (article?.image_url || getBackupImage());
 
   if (loading) {
@@ -204,12 +195,10 @@ const ArticleDetail = () => {
     }
   };
 
-  // Use different heights for mobile and desktop
   const imageHeight = isMobile ? "h-80" : "h-96";
   
   return (
-    <div className="min-h-screen relative pb-20">
-      {/* Article Header */}
+    <div className="min-h-screen w-full relative pb-20">
       <div className={`w-full relative ${imageHeight}`}>
         {isMobile ? (
           <div className="w-full h-full">
@@ -261,8 +250,7 @@ const ArticleDetail = () => {
         </div>
       </div>
 
-      {/* Article Content */}
-      <div className="px-4 py-6">
+      <div className="px-4 py-6 max-w-5xl mx-auto">
         <div className="flex flex-wrap gap-2 mb-4">
           {article.categories && article.categories.map((category) => (
             <Badge key={category} className="bg-primary/20 text-primary">
@@ -290,7 +278,6 @@ const ArticleDetail = () => {
         </div>
       </div>
 
-      {/* Action buttons */}
       <div className="fixed bottom-20 right-4 flex flex-col items-center space-y-6">
         <div className="flex flex-col items-center">
           <Button 

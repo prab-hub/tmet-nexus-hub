@@ -9,7 +9,7 @@ interface NewsLayoutProps {
 
 const NewsLayout = ({ children }: NewsLayoutProps) => {
   return (
-    <SidebarProvider>
+    <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
         <NewsSidebar />
         <main className="flex-1 overflow-hidden">

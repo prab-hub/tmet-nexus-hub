@@ -43,7 +43,7 @@ const categories = [
 
 const NewsSidebar = () => {
   return (
-    <Sidebar defaultCollapsed={false}>
+    <Sidebar>
       <div className="pt-4 px-4">
         <SidebarTrigger className="mb-4" />
         <h1 className="text-xl font-bold mb-2">TMET News</h1>

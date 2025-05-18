@@ -29,7 +29,9 @@ const ArticleDetail = () => {
       
       try {
         setLoading(true);
+        console.log("Fetching article with ID:", id);
         const newsItem = await fetchNewsById(id);
+        console.log("Fetched article:", newsItem);
         if (newsItem) {
           setArticle(newsItem);
         } else {
@@ -200,29 +202,16 @@ const ArticleDetail = () => {
   return (
     <div className="min-h-screen w-full relative pb-20">
       <div className={`w-full relative ${imageHeight}`}>
-        {isMobile ? (
-          <div className="w-full h-full">
-            <img
-              src={imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover"
-              onError={handleImageError}
-              key={`${imageUrl}-${retryCount}`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
-          </div>
-        ) : (
-          <AspectRatio ratio={16/9} className="h-full w-full">
-            <img
-              src={imageUrl}
-              alt={article.title}
-              className="w-full h-full object-cover"
-              onError={handleImageError}
-              key={`${imageUrl}-${retryCount}`}
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
-          </AspectRatio>
-        )}
+        <div className="w-full h-full">
+          <img
+            src={imageUrl}
+            alt={article.title}
+            className="w-full h-full object-cover"
+            onError={handleImageError}
+            key={`${imageUrl}-${retryCount}`}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+        </div>
         
         <Button 
           variant="ghost" 
@@ -271,8 +260,7 @@ const ArticleDetail = () => {
             <div dangerouslySetInnerHTML={{ __html: article.content }} />
           ) : (
             <p className="text-gray-500">
-              This is a placeholder for the full article content. In a real application, 
-              this would display the complete article text with proper formatting.
+              {article.summary || "This is a placeholder for the full article content. In a real application, this would display the complete article text with proper formatting."}
             </p>
           )}
         </div>

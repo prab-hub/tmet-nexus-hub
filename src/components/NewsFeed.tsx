@@ -38,10 +38,11 @@ const NewsFeed = () => {
     const container = event.currentTarget;
     const scrollPosition = container.scrollTop;
     const itemHeight = container.clientHeight;
-    const tolerance = 50; // Add tolerance for better snap detection
+    const itemsPerScreen = isMobile ? 2 : 1; // Show 2 items per screen on mobile
+    const screenHeight = itemHeight / itemsPerScreen;
     
     // Calculate which news item should be active based on scroll position
-    const newIndex = Math.round(scrollPosition / itemHeight);
+    const newIndex = Math.floor(scrollPosition / screenHeight);
     
     if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
       setPreviousIndex(activeIndex);
@@ -88,6 +89,9 @@ const NewsFeed = () => {
 
   // Adjust top padding based on whether we're on mobile (for the selector)
   const topPaddingClass = isMobile ? "pt-20" : "pt-16";
+  
+  // Calculate height for mobile items (50% of screen)
+  const mobileItemHeight = isMobile ? "h-[50vh]" : "h-screen";
 
   return (
     <div className={`h-screen w-full relative overflow-hidden ${topPaddingClass}`}>
@@ -100,12 +104,12 @@ const NewsFeed = () => {
           {news?.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
-              className="h-screen w-full flex-shrink-0 snap-center"
+              className={`${mobileItemHeight} w-full flex-shrink-0 snap-start`}
               id={`news-item-${index}`}
             >
               <NewsCard 
                 news={newsItem} 
-                isActive={index === activeIndex}
+                isActive={isMobile ? true : index === activeIndex}
                 isMobile={isMobile}
               />
             </div>
@@ -113,12 +117,14 @@ const NewsFeed = () => {
         </div>
       </div>
       
-      {/* Scroll indicator */}
-      <NewsScrollIndicator 
-        total={news?.length || 0} 
-        activeIndex={activeIndex}
-        onIndicatorClick={handleIndicatorClick}
-      />
+      {/* Scroll indicator - only show on desktop */}
+      {!isMobile && (
+        <NewsScrollIndicator 
+          total={news?.length || 0} 
+          activeIndex={activeIndex}
+          onIndicatorClick={handleIndicatorClick}
+        />
+      )}
     </div>
   );
 };

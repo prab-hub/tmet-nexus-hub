@@ -15,8 +15,11 @@ const NewsScrollIndicator = ({
 }: NewsScrollIndicatorProps) => {
   const isMobile = useIsMobile();
   
+  // Don't show this on mobile as we now display 2 news items per screen
+  if (isMobile) return null;
+  
   return (
-    <div className={`absolute ${isMobile ? 'right-1 top-1/2' : 'right-2 top-1/2'} -translate-y-1/2 flex flex-col gap-1.5 z-10`}>
+    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
       {Array.from({ length: total }).map((_, index) => (
         <div 
           key={index} 

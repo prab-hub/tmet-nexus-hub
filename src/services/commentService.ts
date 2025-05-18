@@ -63,7 +63,7 @@ export async function fetchComments(newsId: string): Promise<CommentType[]> {
     // Handle potential errors in the profile relation by ensuring proper structure
     return (data || []).map(item => {
       // Check if profile is an error object (failed relation)
-      if (item.profile && typeof item.profile === 'object' && 'error' in item.profile) {
+      if (item.profile && typeof item.profile === 'object' && ('error' in item.profile)) {
         return {
           ...item,
           profile: null // Replace error object with null
@@ -110,7 +110,7 @@ export async function addComment(comment: NewCommentType): Promise<CommentType |
     }
     
     // Handle potential errors in the profile relation
-    if (data && data.profile && typeof data.profile === 'object' && 'error' in data.profile) {
+    if (data && data.profile && typeof data.profile === 'object' && ('error' in data.profile)) {
       return {
         ...data,
         profile: null

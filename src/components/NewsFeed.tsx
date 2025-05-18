@@ -9,16 +9,20 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type News, type NewsCategory } from "../services/newsService";
 import { useAuth } from "../services/authService";
 import { Badge } from "@/components/ui/badge";
+import { useQueryClient } from "@tanstack/react-query";
 
 const NewsFeed = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
   const location = useLocation();
   const navigate = useNavigate();
   const searchParams = new URLSearchParams(location.search);
   const categoryFilter = (searchParams.get("category") || "all") as NewsCategory | 'all';
+  
+  // Initialize the queryClient to make sure it's available
+  const queryClient = useQueryClient();
   
   const { data: news, isLoading, error } = useNews(categoryFilter);
   
@@ -39,9 +43,10 @@ const NewsFeed = () => {
     const container = event.currentTarget;
     const scrollPosition = container.scrollTop;
     const itemHeight = container.clientHeight;
+    const tolerance = 50; // Add tolerance for better snap detection
     
     // Calculate which news item should be active based on scroll position
-    const newIndex = Math.floor(scrollPosition / itemHeight);
+    const newIndex = Math.round(scrollPosition / itemHeight);
     
     if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
       setPreviousIndex(activeIndex);
@@ -110,9 +115,9 @@ const NewsFeed = () => {
   };
 
   return (
-    <div className="h-screen w-full relative">
-      <ScrollArea 
-        className="h-full w-full snap-y snap-mandatory" 
+    <div className="h-screen w-full relative overflow-hidden">
+      <div 
+        className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide" 
         onScroll={handleScroll}
         ref={scrollContainerRef}
       >
@@ -120,7 +125,8 @@ const NewsFeed = () => {
           {news.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
-              className="h-screen w-full snap-start snap-always"
+              className="h-screen w-full flex-shrink-0 snap-center"
+              id={`news-item-${index}`}
             >
               <NewsCard 
                 news={newsItem} 
@@ -130,18 +136,23 @@ const NewsFeed = () => {
             </div>
           ))}
         </div>
-      </ScrollArea>
+      </div>
       
       {/* Scroll indicator */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
         {news.map((_, index) => (
           <div 
             key={index} 
-            className={`w-1.5 h-1.5 rounded-full ${
+            className={`w-1.5 h-1.5 rounded-full cursor-pointer ${
               index === activeIndex 
-                ? 'bg-white' 
+                ? 'bg-white w-2 h-2' 
                 : 'bg-white/30'
             } transition-all duration-300`}
+            onClick={() => {
+              const element = document.getElementById(`news-item-${index}`);
+              element?.scrollIntoView({ behavior: 'smooth' });
+              setActiveIndex(index);
+            }}
           />
         ))}
       </div>

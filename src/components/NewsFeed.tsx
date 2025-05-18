@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -127,7 +126,7 @@ const NewsFeed = () => {
         ref={scrollContainerRef}
       >
         <div className="flex flex-col">
-          {news.map((newsItem, index) => (
+          {news?.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
               className="h-screen w-full flex-shrink-0 snap-center"
@@ -146,7 +145,7 @@ const NewsFeed = () => {
       
       {/* Scroll indicator */}
       <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 z-10">
-        {news.map((_, index) => (
+        {news?.map((_, index) => (
           <div 
             key={index} 
             className={`w-1.5 h-1.5 rounded-full cursor-pointer ${
@@ -285,8 +284,8 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     });
   };
 
-  // Maximum retries for image loading
-  const MAX_RETRIES = 2;
+  // Maximum retries for image loading with increased attempts
+  const MAX_RETRIES = 3;
   const [retryCount, setRetryCount] = useState(0);
 
   const handleImageError = () => {
@@ -296,9 +295,10 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
         setRetryCount(prev => prev + 1);
         // Force re-render the image
         setImageError(false);
-      }, 500);
+      }, 800); // Increased delay to give more time for loading
     } else {
       setImageError(true);
+      console.error(`Failed to load image after ${MAX_RETRIES} attempts:`, news.image_url);
     }
   };
 
@@ -315,26 +315,35 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     }
   };
 
-  // Get a backup image based on the category
+  // Get a backup image based on the category with better quality images
   const getBackupImage = () => {
     const category = news.categories && news.categories[0] ? news.categories[0] : 'default';
     switch(category) {
       case 'technology': 
-        return 'https://images.unsplash.com/photo-1518770660439-4636190af475';
+        return 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80';
       case 'telecom':
-        return 'https://images.unsplash.com/photo-1546027658-7aa750153465';
+        return 'https://images.unsplash.com/photo-1546027658-7aa750153465?auto=format&fit=crop&w=1200&q=80';
       case 'media':
-        return 'https://images.unsplash.com/photo-1626812754718-79351472df4f';
+        return 'https://images.unsplash.com/photo-1626812754718-79351472df4f?auto=format&fit=crop&w=1200&q=80';
       case 'entertainment':
-        return 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852';
+        return 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852?auto=format&fit=crop&w=1200&q=80';
       case 'trending':
-        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f';
+        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80';
       default:
-        return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c';
+        return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
     }
   };
 
-  const imageUrl = (imageError || !news.image_url) ? getBackupImage() : news.image_url;
+  // Use the image URL directly with fallback to backup image
+  // Use the original URL first, not the error state to prioritize real images
+  const imageUrl = news.image_url || getBackupImage();
+
+  // Debug logging
+  useEffect(() => {
+    console.log("News item image URL:", news.image_url);
+    console.log("Using image URL:", imageUrl);
+    console.log("Using aspect ratio:", isMobile ? "9/16" : "16/9");
+  }, [news.image_url, imageUrl, isMobile]);
 
   return (
     <Card 

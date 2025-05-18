@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "../services/authService";
 import { fetchNewsById, likeNews, bookmarkNews, shareNews, type News } from "../services/newsService";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { useIsMobile } from "../hooks/use-mobile";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -19,6 +21,9 @@ const ArticleDetail = () => {
   const [error, setError] = useState<string | null>(null);
   const [liked, setLiked] = useState<boolean>(false);
   const [bookmarked, setBookmarked] = useState<boolean>(false);
+  const [imageError, setImageError] = useState<boolean>(false);
+  const [retryCount, setRetryCount] = useState<number>(0);
+  const isMobile = useIsMobile();
   
   useEffect(() => {
     async function loadArticle() {
@@ -125,6 +130,44 @@ const ArticleDetail = () => {
     navigate(-1);
   };
 
+  const handleImageError = () => {
+    const MAX_RETRIES = 5;
+    if (retryCount < MAX_RETRIES) {
+      // Try again with a delay
+      setTimeout(() => {
+        setRetryCount(prev => prev + 1);
+        // Force re-render the image
+        setImageError(false);
+      }, 1000);
+    } else {
+      setImageError(true);
+    }
+  };
+
+  // Get a backup image based on the category
+  const getBackupImage = () => {
+    if (!article) return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
+    
+    const category = article.categories && article.categories[0] ? article.categories[0] : 'default';
+    switch(category) {
+      case 'technology': 
+        return 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80';
+      case 'telecom':
+        return 'https://images.unsplash.com/photo-1546027658-7aa750153465?auto=format&fit=crop&w=1200&q=80';
+      case 'media':
+        return 'https://images.unsplash.com/photo-1626812754718-79351472df4f?auto=format&fit=crop&w=1200&q=80';
+      case 'entertainment':
+        return 'https://images.unsplash.com/photo-1603190287605-e6ade32fa852?auto=format&fit=crop&w=1200&q=80';
+      case 'trending':
+        return 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?auto=format&fit=crop&w=1200&q=80';
+      default:
+        return 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?auto=format&fit=crop&w=1200&q=80';
+    }
+  };
+
+  // Always prioritize the original image URL first, then fallback if there's an error
+  const imageUrl = imageError ? getBackupImage() : (article?.image_url || getBackupImage());
+
   if (loading) {
     return (
       <NewsLayout>
@@ -166,17 +209,25 @@ const ArticleDetail = () => {
     }
   };
 
+  // Use different heights for mobile and desktop
+  const imageHeight = isMobile ? "h-80" : "h-96";
+  
   return (
     <NewsLayout>
       <div className="min-h-screen relative pb-20">
         {/* Article Header */}
-        <div 
-          className="h-72 w-full bg-center bg-cover relative"
-          style={{ 
-            backgroundImage: `url(${article.image_url || 'https://placehold.co/600x400?text=No+Image'})`
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+        <div className={`w-full relative ${imageHeight}`}>
+          <AspectRatio ratio={isMobile ? 4/3 : 16/9} className="h-full w-full">
+            <img
+              src={imageUrl}
+              alt={article.title}
+              className="w-full h-full object-cover"
+              onError={handleImageError}
+              key={`${imageUrl}-${retryCount}`} // Force re-render on retry
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-black/30" />
+          </AspectRatio>
+          
           <Button 
             variant="ghost" 
             size="icon"
@@ -196,7 +247,7 @@ const ArticleDetail = () => {
               <span className="text-white/90 text-sm font-medium">{article.source || 'Unknown Source'}</span>
               <span className="text-white/70 text-xs ml-auto">{formatDate(article.news_date)}</span>
             </div>
-            <h1 className="text-white text-3xl font-bold">{article.title}</h1>
+            <h1 className="text-white text-2xl md:text-3xl font-bold">{article.title}</h1>
           </div>
         </div>
 

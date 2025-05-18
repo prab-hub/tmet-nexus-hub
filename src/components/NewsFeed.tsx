@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -284,8 +285,8 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     });
   };
 
-  // Maximum retries for image loading with increased attempts
-  const MAX_RETRIES = 3;
+  // Maximum retries for image loading with multiple attempts
+  const MAX_RETRIES = 5;
   const [retryCount, setRetryCount] = useState(0);
 
   const handleImageError = () => {
@@ -295,7 +296,7 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
         setRetryCount(prev => prev + 1);
         // Force re-render the image
         setImageError(false);
-      }, 800); // Increased delay to give more time for loading
+      }, 1000); // Increased delay to give more time for loading
     } else {
       setImageError(true);
       console.error(`Failed to load image after ${MAX_RETRIES} attempts:`, news.image_url);
@@ -334,16 +335,11 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
     }
   };
 
-  // Use the image URL directly with fallback to backup image
-  // Use the original URL first, not the error state to prioritize real images
-  const imageUrl = news.image_url || getBackupImage();
-
-  // Debug logging
-  useEffect(() => {
-    console.log("News item image URL:", news.image_url);
-    console.log("Using image URL:", imageUrl);
-    console.log("Using aspect ratio:", isMobile ? "9/16" : "16/9");
-  }, [news.image_url, imageUrl, isMobile]);
+  // Always prioritize the original image URL first, then fallback if there's an error
+  const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
+  
+  // Use different aspect ratios for mobile and desktop
+  const aspectRatio = isMobile ? 3/4 : 16/9;
 
   return (
     <Card 
@@ -351,15 +347,17 @@ const NewsCard = ({ news, isActive, onViewArticle, isMobile }: NewsCardProps) =>
       onClick={handleClick}
     >
       <div className="absolute inset-0">
-        <AspectRatio ratio={isMobile ? 9/16 : 16/9} className="h-full w-full">
-          <img 
-            src={imageUrl} 
-            alt={news.title}
-            className="w-full h-full object-cover"
-            onError={handleImageError}
-            key={`${imageUrl}-${retryCount}`} // Force re-render on retry
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+        <AspectRatio ratio={aspectRatio} className="h-full w-full">
+          <div className="relative w-full h-full">
+            <img 
+              src={imageUrl} 
+              alt={news.title}
+              className={`w-full h-full object-cover ${isMobile ? 'object-center' : ''}`}
+              onError={handleImageError}
+              key={`${imageUrl}-${retryCount}`} // Force re-render on retry
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+          </div>
         </AspectRatio>
       </div>
       

@@ -1,9 +1,7 @@
 
 import React from "react";
-import NewsLayout from "../components/NewsLayout";
 import NewsFeed from "../components/NewsFeed";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { NavigationMenu, NavigationMenuContent, NavigationMenuItem, NavigationMenuLink, NavigationMenuList, NavigationMenuTrigger } from "@/components/ui/navigation-menu";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useIsMobile } from "../hooks/use-mobile";
 import type { NewsCategory } from "../services/newsService";
@@ -33,12 +31,12 @@ const Feed = () => {
     <div className="min-h-screen flex flex-col w-full">
       {/* Mobile category selector */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 z-20 px-4 pt-6 pb-2 bg-gradient-to-b from-black/80 to-transparent backdrop-blur-sm">
+        <div className="fixed top-0 left-0 right-0 z-20 px-4 pt-6 pb-2 bg-gradient-to-b from-black/90 to-transparent backdrop-blur-sm">
           <Select 
             value={currentCategory} 
             onValueChange={handleCategoryChange}
           >
-            <SelectTrigger className="w-full bg-black/50 border-white/20 text-white">
+            <SelectTrigger className="w-full bg-black/70 border-white/20 text-white">
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -54,24 +52,21 @@ const Feed = () => {
       
       {/* Desktop category selector */}
       {!isMobile && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/50 backdrop-blur-sm px-2 py-1 rounded-full">
-          <NavigationMenu>
-            <NavigationMenuList>
-              {categories.map((category) => (
-                <NavigationMenuItem key={category.value}>
-                  <NavigationMenuLink
-                    className={cn(
-                      "px-4 py-2 rounded-full text-sm transition-colors hover:bg-white/10",
-                      currentCategory === category.value ? "bg-white/20 font-medium" : "text-white/70"
-                    )}
-                    onClick={() => handleCategoryChange(category.value)}
-                  >
-                    {category.label}
-                  </NavigationMenuLink>
-                </NavigationMenuItem>
-              ))}
-            </NavigationMenuList>
-          </NavigationMenu>
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-20 bg-black/70 backdrop-blur-md px-4 py-2 rounded-full">
+          <nav className="flex space-x-1">
+            {categories.map((category) => (
+              <button
+                key={category.value}
+                className={cn(
+                  "px-4 py-2 rounded-full text-sm transition-colors hover:bg-white/10",
+                  currentCategory === category.value ? "bg-white/30 font-medium" : "text-white/70"
+                )}
+                onClick={() => handleCategoryChange(category.value)}
+              >
+                {category.label}
+              </button>
+            ))}
+          </nav>
         </div>
       )}
       

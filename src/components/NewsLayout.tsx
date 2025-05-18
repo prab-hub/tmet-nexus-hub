@@ -5,8 +5,17 @@ import NewsSidebar from "./NewsSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../services/authService";
 import { useNavigate } from "react-router-dom";
-import { LogIn, LogOut } from "lucide-react";
+import { LogIn, LogOut, User } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 
 interface NewsLayoutProps {
   children: React.ReactNode;
@@ -17,7 +26,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
   const navigate = useNavigate();
   
   const handleLogin = () => {
-    navigate("/auth");
+    navigate("/auth", { state: { from: location.pathname + location.search } });
   };
   
   const handleLogout = async () => {
@@ -36,6 +45,15 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
     }
   };
   
+  const goToProfile = () => {
+    navigate("/profile");
+  };
+  
+  const getInitials = (email?: string) => {
+    if (!email) return "U";
+    return email.substring(0, 2).toUpperCase();
+  };
+  
   return (
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
@@ -43,19 +61,31 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
         <main className="flex-1 overflow-hidden relative">
           <div className="absolute top-4 right-4 z-10">
             {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <div className="text-white text-right mr-2">
-                  <div className="font-medium">{user?.email}</div>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={handleLogout}
-                  className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
-                >
-                  <LogOut className="h-5 w-5" />
-                </Button>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="icon"
+                    className="rounded-full bg-black/30 backdrop-blur-sm border border-white/10 text-white"
+                  >
+                    <Avatar className="h-8 w-8">
+                      <AvatarFallback className="bg-transparent text-white text-sm">
+                        {getInitials(user?.email)}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>{user?.email}</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={goToProfile}>
+                    <User className="h-4 w-4 mr-2" /> Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleLogout}>
+                    <LogOut className="h-4 w-4 mr-2" /> Log out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             ) : (
               <Button 
                 variant="ghost" 

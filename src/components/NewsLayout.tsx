@@ -91,34 +91,36 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
     <SidebarProvider defaultOpen={true}>
       <div className="min-h-screen flex w-full">
         <NewsSidebar />
-        <main className="flex-1 overflow-hidden relative">
-          {/* Fixed Header with Logo and Auth Buttons - Ensure it's always visible */}
-          <div className="fixed top-0 left-0 right-0 h-16 z-50 bg-black/70 backdrop-blur-md flex justify-between items-center px-4 md:px-6 shadow-md border-b border-white/10">
-            {/* Company Logo - Left side */}
+        
+        {/* Fixed Header - This will be visible on all pages */}
+        <header className="fixed top-0 left-0 right-0 h-16 z-[100] bg-black shadow-lg border-b border-white/20">
+          <div className="container mx-auto h-full flex justify-between items-center px-4">
+            {/* Logo - Left side */}
             <div className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-white" />
-              <span className="font-bold text-lg text-white">TMET Hub</span>
+              <Shield className="h-7 w-7 text-white" />
+              <span className="font-bold text-xl text-white">TMET Hub</span>
             </div>
             
-            {/* Login/Profile Button - Right side */}
+            {/* Auth Controls - Right side */}
             <div>
               {isAuthenticated ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button 
-                      variant="ghost" 
-                      size="icon"
-                      className="rounded-full bg-white/10 hover:bg-white/20 text-white"
+                      variant="outline" 
+                      size="sm"
+                      className="bg-white/10 border-white/30 text-white hover:bg-white/20"
                     >
-                      <Avatar className="h-8 w-8 ring-2 ring-white/30">
+                      <Avatar className="h-6 w-6 mr-2 ring-1 ring-white/50">
                         {userProfile?.avatar_url ? (
                           <AvatarImage src={userProfile.avatar_url} />
                         ) : (
-                          <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                             {getInitials(user?.email, userProfile?.username)}
                           </AvatarFallback>
                         )}
                       </Avatar>
+                      <span>Profile</span>
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -137,14 +139,16 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                   variant="outline" 
                   size="sm"
                   onClick={handleLogin}
-                  className="bg-white/10 border-white/20 text-white hover:bg-white/20 hover:text-white"
+                  className="bg-white/10 border-white/30 text-white hover:bg-white/20"
                 >
                   <LogIn className="h-4 w-4 mr-2" /> Sign In
                 </Button>
               )}
             </div>
           </div>
-          
+        </header>
+        
+        <main className="flex-1 overflow-hidden relative">
           {/* Add padding to account for the fixed header */}
           <div className="pt-16">
             {children}

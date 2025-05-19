@@ -105,9 +105,9 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Fixed header with all elements integrated */}
+      {/* Fixed header with all elements in a single row */}
       <header className="fixed top-0 left-0 right-0 h-16 z-[9999] bg-black border-b border-gray-800 shadow-lg">
-        <div className="container mx-auto h-full flex items-center justify-between px-4">
+        <div className="container mx-auto h-full px-4 flex items-center">
           {/* Logo */}
           <div 
             className="flex items-center gap-2 cursor-pointer" 
@@ -117,9 +117,9 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
             <span className="font-bold text-xl text-white hidden sm:inline">TMET Hub</span>
           </div>
 
-          {/* Categories - center aligned */}
-          <div className="flex-1 max-w-3xl mx-4 overflow-x-auto no-scrollbar">
-            <div className="flex space-x-1 px-2">
+          {/* Categories - horizontally scrollable */}
+          <div className="flex-1 mx-4 overflow-x-auto no-scrollbar">
+            <nav className="flex space-x-1">
               {categories.map((category) => (
                 <button
                   key={category.value}
@@ -130,7 +130,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                   {category.label}
                 </button>
               ))}
-            </div>
+            </nav>
           </div>
           
           {/* Auth Controls */}
@@ -180,7 +180,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
         </div>
       </header>
 
-      {/* Main Content Area - with proper padding for fixed header */}
+      {/* Main Content Area with padding for fixed header */}
       <main className="flex-1 pt-16">
         {children}
       </main>

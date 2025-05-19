@@ -88,13 +88,13 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
   };
   
   return (
-    <div className="min-h-screen flex flex-col w-full">
-      {/* Fixed Header - Ensuring it's always visible */}
-      <header className="fixed top-0 left-0 right-0 h-16 z-[9999] bg-black shadow-lg">
+    <div className="flex flex-col min-h-screen w-full">
+      {/* Header - With increased z-index to ensure it's always on top */}
+      <header className="fixed top-0 left-0 right-0 h-16 z-[9999] bg-black border-b border-gray-800 shadow-lg">
         <div className="container mx-auto h-full flex justify-between items-center px-4">
           {/* Logo - Left side */}
-          <div className="flex items-center gap-2">
-            <Shield className="h-7 w-7 text-white" />
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+            <Shield className="h-8 w-8 text-white" />
             <span className="font-bold text-xl text-white">TMET Hub</span>
           </div>
           
@@ -106,9 +106,9 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="bg-white/10 border-white/30 text-white hover:bg-white/20 hover:border-white/50"
+                    className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60"
                   >
-                    <Avatar className="h-6 w-6 mr-2 ring-1 ring-white">
+                    <Avatar className="h-6 w-6 mr-2 ring-2 ring-white">
                       {userProfile?.avatar_url ? (
                         <AvatarImage src={userProfile.avatar_url} />
                       ) : (
@@ -136,7 +136,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                 variant="outline" 
                 size="sm"
                 onClick={handleLogin}
-                className="bg-white/10 border-white/30 text-white hover:bg-white/20"
+                className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 font-semibold"
               >
                 <LogIn className="h-4 w-4 mr-2" /> Sign In
               </Button>
@@ -145,12 +145,12 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
         </div>
       </header>
 
-      {/* Main Content Area with Sidebar */}
+      {/* Main Content Area with Sidebar - With proper spacing to avoid header overlap */}
       <div className="flex w-full pt-16">
         <SidebarProvider defaultOpen={true}>
           <div className="flex flex-1">
             <NewsSidebar />
-            <main className="flex-1 overflow-hidden">
+            <main className="flex-1 overflow-auto">
               {children}
             </main>
           </div>

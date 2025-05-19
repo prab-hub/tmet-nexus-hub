@@ -1,10 +1,8 @@
 
 import React from "react";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import NewsSidebar from "./NewsSidebar";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "../services/authService";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { LogIn, LogOut, User, Shield } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
 import { 
@@ -17,14 +15,28 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { supabase } from "@/integrations/supabase/client";
+import type { NewsCategory } from "../services/newsService";
 
 interface NewsLayoutProps {
   children: React.ReactNode;
 }
 
+const categories: { label: string; value: NewsCategory | "all" }[] = [
+  { label: "All News", value: "all" },
+  { label: "Telecom", value: "telecom" },
+  { label: "Media", value: "media" },
+  { label: "Entertainment", value: "entertainment" },
+  { label: "Technology", value: "technology" },
+  { label: "Trending", value: "trending" },
+];
+
 const NewsLayout = ({ children }: NewsLayoutProps) => {
   const { user, signOut, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const currentCategory = searchParams.get("category") || "all";
+  
   const [userProfile, setUserProfile] = React.useState<{username?: string, avatar_url?: string} | null>(null);
   
   React.useEffect(() => {
@@ -86,19 +98,42 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
     if (!email) return "U";
     return email.substring(0, 2).toUpperCase();
   };
+
+  const handleCategoryChange = (category: string) => {
+    navigate(`/?category=${category}`);
+  };
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Header - With increased z-index to ensure it's always on top */}
+      {/* Fixed header with all elements integrated */}
       <header className="fixed top-0 left-0 right-0 h-16 z-[9999] bg-black border-b border-gray-800 shadow-lg">
-        <div className="container mx-auto h-full flex justify-between items-center px-4">
-          {/* Logo - Left side */}
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
+        <div className="container mx-auto h-full flex items-center justify-between px-4">
+          {/* Logo */}
+          <div 
+            className="flex items-center gap-2 cursor-pointer" 
+            onClick={() => navigate("/")}
+          >
             <Shield className="h-8 w-8 text-white" />
-            <span className="font-bold text-xl text-white">TMET Hub</span>
+            <span className="font-bold text-xl text-white hidden sm:inline">TMET Hub</span>
+          </div>
+
+          {/* Categories - center aligned */}
+          <div className="flex-1 max-w-3xl mx-4 overflow-x-auto no-scrollbar">
+            <div className="flex space-x-1 px-2">
+              {categories.map((category) => (
+                <button
+                  key={category.value}
+                  className={`px-3 py-2 text-sm whitespace-nowrap transition-colors hover:bg-white/10 rounded-md
+                    ${currentCategory === category.value ? "bg-white/20 font-medium text-white" : "text-white/70"}`}
+                  onClick={() => handleCategoryChange(category.value)}
+                >
+                  {category.label}
+                </button>
+              ))}
+            </div>
           </div>
           
-          {/* Auth Controls - Right side */}
+          {/* Auth Controls */}
           <div>
             {isAuthenticated ? (
               <DropdownMenu>
@@ -117,7 +152,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <span>Profile</span>
+                    <span className="hidden sm:inline">Profile</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -138,24 +173,17 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                 onClick={handleLogin}
                 className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 font-semibold"
               >
-                <LogIn className="h-4 w-4 mr-2" /> Sign In
+                <LogIn className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Sign In</span>
               </Button>
             )}
           </div>
         </div>
       </header>
 
-      {/* Main Content Area with Sidebar - With proper spacing to avoid header overlap */}
-      <div className="flex w-full pt-16">
-        <SidebarProvider defaultOpen={true}>
-          <div className="flex flex-1">
-            <NewsSidebar />
-            <main className="flex-1 overflow-auto">
-              {children}
-            </main>
-          </div>
-        </SidebarProvider>
-      </div>
+      {/* Main Content Area - with proper padding for fixed header */}
+      <main className="flex-1 pt-16">
+        {children}
+      </main>
     </div>
   );
 };

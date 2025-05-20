@@ -49,9 +49,6 @@ const NewsFeed = () => {
     }
   };
 
-  // Remove the category announcement toast when active news item changes
-  // We've completely removed the useEffect that was announcing category changes
-
   // Handle scroll indicator click
   const handleIndicatorClick = (index: number) => {
     const element = document.getElementById(`news-item-${index}`);
@@ -73,15 +70,9 @@ const NewsFeed = () => {
   if (!news || news.length === 0) {
     return <NewsEmptyState navigate={navigate} />;
   }
-
-  // Adjust top padding based on whether we're on mobile (for the selector)
-  const topPaddingClass = isMobile ? "pt-20" : "pt-16";
   
-  // Calculate height for mobile items (50% of screen)
-  const mobileItemHeight = isMobile ? "h-[50vh]" : "h-screen";
-
   return (
-    <div className={`h-screen w-full relative overflow-hidden ${topPaddingClass}`}>
+    <div className="h-screen w-full relative overflow-hidden">
       <div 
         className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide snap-y snap-mandatory" 
         onScroll={handleScroll}
@@ -91,7 +82,7 @@ const NewsFeed = () => {
           {news?.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
-              className={`${mobileItemHeight} w-full flex-shrink-0 snap-start`}
+              className="h-screen w-full flex-shrink-0 snap-start"
               id={`news-item-${index}`}
             >
               <NewsCard 

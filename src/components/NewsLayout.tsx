@@ -105,25 +105,25 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
   
   return (
     <div className="flex flex-col min-h-screen w-full">
-      {/* Fixed header with all elements in a single row */}
-      <header className="fixed top-0 left-0 right-0 h-16 z-[9999] bg-black border-b border-gray-800 shadow-lg">
-        <div className="container mx-auto h-full px-4 flex items-center">
+      {/* Fixed header with simplified single row layout */}
+      <header className="fixed top-0 left-0 right-0 h-14 z-[9999] bg-black border-b border-gray-800 shadow-lg">
+        <div className="container mx-auto h-full px-2 flex items-center">
           {/* Logo */}
           <div 
-            className="flex items-center gap-2 cursor-pointer" 
+            className="flex items-center gap-2 cursor-pointer mr-2" 
             onClick={() => navigate("/")}
           >
-            <Shield className="h-8 w-8 text-white" />
-            <span className="font-bold text-xl text-white hidden sm:inline">TMET Hub</span>
+            <Shield className="h-6 w-6 text-white" />
+            <span className="font-bold text-lg text-white hidden sm:inline whitespace-nowrap">TMET Hub</span>
           </div>
 
           {/* Categories - horizontally scrollable */}
-          <div className="flex-1 mx-4 overflow-x-auto no-scrollbar">
+          <div className="flex items-center overflow-x-auto no-scrollbar">
             <nav className="flex space-x-1">
               {categories.map((category) => (
                 <button
                   key={category.value}
-                  className={`px-3 py-2 text-sm whitespace-nowrap transition-colors hover:bg-white/10 rounded-md
+                  className={`px-2 py-1 text-xs whitespace-nowrap transition-colors hover:bg-white/10 rounded
                     ${currentCategory === category.value ? "bg-white/20 font-medium text-white" : "text-white/70"}`}
                   onClick={() => handleCategoryChange(category.value)}
                 >
@@ -134,16 +134,16 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
           </div>
           
           {/* Auth Controls */}
-          <div>
+          <div className="ml-auto">
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button 
                     variant="outline" 
                     size="sm"
-                    className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60"
+                    className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 h-8 px-2"
                   >
-                    <Avatar className="h-6 w-6 mr-2 ring-2 ring-white">
+                    <Avatar className="h-5 w-5 mr-1">
                       {userProfile?.avatar_url ? (
                         <AvatarImage src={userProfile.avatar_url} />
                       ) : (
@@ -152,7 +152,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                         </AvatarFallback>
                       )}
                     </Avatar>
-                    <span className="hidden sm:inline">Profile</span>
+                    <span className="text-xs">Profile</span>
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -171,9 +171,9 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
                 variant="outline" 
                 size="sm"
                 onClick={handleLogin}
-                className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 font-semibold"
+                className="bg-white/20 border-white/40 text-white hover:bg-white/30 hover:border-white/60 h-8 px-2 text-xs"
               >
-                <LogIn className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Sign In</span>
+                <LogIn className="h-4 w-4 mr-1" /> Sign In
               </Button>
             )}
           </div>
@@ -181,7 +181,7 @@ const NewsLayout = ({ children }: NewsLayoutProps) => {
       </header>
 
       {/* Main Content Area with padding for fixed header */}
-      <main className="flex-1 pt-16">
+      <main className="flex-1 pt-14">
         {children}
       </main>
     </div>

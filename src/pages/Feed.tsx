@@ -4,7 +4,7 @@ import NewsFeed from "../components/NewsFeed";
 
 const Feed = () => {
   return (
-    <div className="container mx-auto px-4">
+    <div className="w-full h-full">
       <NewsFeed />
     </div>
   );

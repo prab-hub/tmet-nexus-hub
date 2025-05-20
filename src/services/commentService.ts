@@ -37,6 +37,8 @@ export async function fetchComments(newsId: string, commentsOnly: boolean = fals
       return [];
     }
     
+    console.log('Fetched comments:', data); // Debug log to see what's coming back
+    
     // If commentsOnly is true, return just the comments without profile info
     if (commentsOnly) {
       return (data || []).map(comment => ({
@@ -72,11 +74,13 @@ export async function addComment(commentData: {
   parent_id?: string | null;
 }): Promise<CommentType | null> {
   try {
+    console.log('Adding comment with data:', commentData); // Debug data being sent
+    
     // Insert the comment
     const { data, error } = await supabase
       .from('comments')
       .insert([commentData])
-      .select('*, profile:profiles(username, avatar_url)')
+      .select('*')
       .single();
     
     if (error) {
@@ -84,22 +88,30 @@ export async function addComment(commentData: {
       return null;
     }
     
+    console.log('Comment added successfully:', data); // Log the successful insertion
+    
     if (!data) {
       return null;
     }
     
-    // Handle potential errors in the profile relation
-    const profile = data.profile || {};
-    const hasError = typeof profile === 'object' && 'error' in profile;
-    
-    if (hasError) {
-      return {
-        ...data,
-        profile: null
-      } as unknown as CommentType;
+    // Fetch the profile information to match the expected return type
+    const { data: profileData, error: profileError } = await supabase
+      .from('profiles')
+      .select('username, avatar_url')
+      .eq('id', commentData.user_id)
+      .maybeSingle();
+      
+    if (profileError) {
+      console.error('Error fetching profile data:', profileError);
     }
     
-    return data as unknown as CommentType;
+    // Combine the comment with profile data
+    const commentWithProfile = {
+      ...data,
+      profile: profileData || null
+    } as unknown as CommentType;
+    
+    return commentWithProfile;
   } catch (error) {
     console.error('Error in addComment:', error);
     return null;

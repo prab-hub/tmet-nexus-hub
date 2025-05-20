@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -67,7 +66,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
   const loadComments = async () => {
     try {
       setLoading(true);
+      console.log("Fetching comments for news ID:", newsId);
       const fetchedComments = await fetchComments(newsId);
+      console.log("Fetched comments:", fetchedComments);
       setComments(fetchedComments);
       
       // Fetch profiles for all unique user IDs in comments
@@ -98,38 +99,40 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
 
     try {
       setLoading(true);
-      const comment = await addComment({
+      const commentData = {
         content: newComment,
         news_id: newsId,
         parent_id: replyTo,
         user_id: user.id,
-      });
+      };
+      
+      console.log("Sending comment data:", commentData);
+      const comment = await addComment(commentData);
       
       // Optimistic UI update
       if (comment) {
-        // If we have profile data in our local state, use it
-        const updatedComment = {
-          ...comment,
-          profile: userProfiles[user.id] || comment.profile
-        };
+        console.log("Comment added successfully:", comment);
         
-        // Add the new comment to the start of the array
-        if (replyTo) {
-          // For replies, reload comments to get the proper thread structure
-          await loadComments();
-        } else {
-          // For top-level comments, just add to the beginning of the array
-          setComments(prevComments => [updatedComment, ...prevComments]);
-        }
+        // Add the new comment to the comments array and sort by created_at
+        setComments(prevComments => {
+          const updatedComments = [...prevComments, comment];
+          // Sort comments by created_at (newest first)
+          return updatedComments.sort((a, b) => 
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+          );
+        });
+        
+        setNewComment("");
+        setReplyTo(null);
+        
+        toast({
+          title: "Comment added",
+          description: "Your comment has been posted",
+        });
+        
+        // Force reload comments to ensure we have the latest data
+        await loadComments();
       }
-      
-      setNewComment("");
-      setReplyTo(null);
-      
-      toast({
-        title: "Comment added",
-        description: "Your comment has been posted",
-      });
     } catch (error) {
       toast({
         title: "Error",

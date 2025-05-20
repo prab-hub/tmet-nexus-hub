@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -153,39 +152,58 @@ const ArticleDetail = () => {
   };
   
   const handleShare = async () => {
-    // Fix: Improve share functionality
+    // Define the shareUrl regardless of authentication status
     const shareUrl = window.location.href;
         
     try {
-      // First copy to clipboard regardless of native share availability
+      // First copy to clipboard as a reliable fallback that works on all devices
       await navigator.clipboard.writeText(shareUrl);
       
-      // Use native share if available
+      // Try to use the Web Share API if available (mobile devices primarily)
       if (navigator.share) {
-        await navigator.share({
-          title: article?.title || 'TMET Hub Article',
-          text: article?.summary || '',
-          url: shareUrl,
-        });
-        
-        // Track successful share
-        if (article) {
-          try {
-            await shareNews(article.id, user?.id);
+        try {
+          await navigator.share({
+            title: article?.title || 'TMET Hub Article',
+            text: article?.summary || '',
+            url: shareUrl,
+          });
+          
+          // Track successful share
+          if (article) {
+            try {
+              // Track the share - user authentication is optional for sharing
+              await shareNews(article.id, user?.id);
+              toast({
+                title: "Shared successfully",
+                description: "Article shared successfully",
+                duration: 1500,
+              });
+            } catch (error) {
+              console.error("Failed to track share:", error);
+            }
+          }
+        } catch (err) {
+          // The user may have canceled the share operation
+          // In this case, we already copied to clipboard, so show that message
+          if (err.name !== 'AbortError') {
             toast({
-              title: "Success",
-              description: "Article shared successfully",
+              title: "Link copied",
+              description: "Article link copied to clipboard",
               duration: 1500,
             });
-          } catch (error) {
-            console.error("Failed to track share:", error);
           }
         }
-        return;
+      } else {
+        // Web Share API not available, clipboard copy already done
+        toast({
+          title: "Link copied",
+          description: "Article link copied to clipboard",
+          duration: 1500,
+        });
+        
+        // Open share modal for more options
+        setShareModalOpen(true);
       }
-      
-      // Open share modal for more options if native share isn't available
-      setShareModalOpen(true);
       
       // Track share via copy to clipboard
       if (article) {
@@ -195,12 +213,6 @@ const ArticleDetail = () => {
           console.error("Failed to track share:", error);
         }
       }
-      
-      toast({
-        title: "Link copied",
-        description: "Article link copied to clipboard",
-        duration: 1500,
-      });
     } catch (err) {
       console.error("Share error:", err);
       toast({
@@ -508,7 +520,7 @@ const ArticleDetail = () => {
                 }}
               >
                 <div className="w-10 h-10 flex items-center justify-center bg-[#1877F2] text-white rounded-full mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
                 </div>
                 <span className="text-xs">Facebook</span>
               </button>
@@ -547,7 +559,7 @@ const ArticleDetail = () => {
                 }}
               >
                 <div className="w-10 h-10 flex items-center justify-center bg-[#0088cc] text-white rounded-full mb-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.2 8.4c.5.38.8.96.8 1.6v10a3 3 0 0 1-3 3H5a3 3 0 0 1-3-3V10a3 3 0 0 1 3-3h14c.64 0 1.22.3 1.6.78"></path><path d="M3 9l9 6l9-6"></path></svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.2 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><path d="M3 9l9 6l9-6"></path></svg>
                 </div>
                 <span className="text-xs">Telegram</span>
               </button>

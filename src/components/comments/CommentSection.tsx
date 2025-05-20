@@ -69,11 +69,14 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
       console.log("Fetching comments for news ID:", newsId);
       const fetchedComments = await fetchComments(newsId);
       console.log("Fetched comments:", fetchedComments);
-      setComments(fetchedComments);
       
-      // Fetch profiles for all unique user IDs in comments
-      const userIds = Array.from(new Set(fetchedComments.map(comment => comment.user_id)));
-      await Promise.all(userIds.map(userId => fetchUserProfile(userId)));
+      if (fetchedComments.length > 0) {
+        setComments(fetchedComments);
+        
+        // Fetch profiles for all unique user IDs in comments
+        const userIds = Array.from(new Set(fetchedComments.map(comment => comment.user_id)));
+        await Promise.all(userIds.map(userId => fetchUserProfile(userId)));
+      }
     } catch (error) {
       toast({
         title: "Error",
@@ -100,7 +103,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
     try {
       setLoading(true);
       const commentData = {
-        content: newComment,
+        content: newComment.trim(),
         news_id: newsId,
         parent_id: replyTo,
         user_id: user.id,
@@ -109,7 +112,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
       console.log("Sending comment data:", commentData);
       const comment = await addComment(commentData);
       
-      // Optimistic UI update
       if (comment) {
         console.log("Comment added successfully:", comment);
         
@@ -129,9 +131,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
           title: "Comment added",
           description: "Your comment has been posted",
         });
-        
-        // Force reload comments to ensure we have the latest data
-        await loadComments();
       }
     } catch (error) {
       toast({

@@ -20,13 +20,12 @@ export type CommentType = {
 // Standalone functions for direct import
 export async function fetchComments(newsId: string, commentsOnly: boolean = false): Promise<CommentType[]> {
   try {
-    let query = supabase
+    // Use separate query without the relation that's causing the error
+    const { data, error } = await supabase
       .from('comments')
-      .select('*, profile:profiles(username, avatar_url)')
+      .select('*')
       .eq('news_id', newsId)
       .order('created_at', { ascending: false });
-    
-    const { data, error } = await query;
     
     if (error) {
       console.error('Error fetching comments:', error);
@@ -41,26 +40,27 @@ export async function fetchComments(newsId: string, commentsOnly: boolean = fals
     
     // If commentsOnly is true, return just the comments without profile info
     if (commentsOnly) {
-      return (data || []).map(comment => ({
-        ...comment,
-        profile: null
-      })) as CommentType[];
+      return data as CommentType[];
     }
     
-    // Handle potential errors in the profile relation by ensuring proper structure
-    return (data || []).map(item => {
-      // Safely check if profile has an error by first verifying profile exists
-      const profile = item.profile || {};
-      const hasError = typeof profile === 'object' && 'error' in profile;
-      
-      if (hasError) {
+    // For each comment, fetch the profile separately
+    const commentsWithProfiles = await Promise.all(
+      data.map(async (comment) => {
+        // Fetch profile information for each comment
+        const { data: profileData } = await supabase
+          .from('profiles')
+          .select('username, avatar_url')
+          .eq('id', comment.user_id)
+          .maybeSingle();
+          
         return {
-          ...item,
-          profile: null
+          ...comment,
+          profile: profileData || null
         } as unknown as CommentType;
-      }
-      return item as unknown as CommentType;
-    });
+      })
+    );
+    
+    return commentsWithProfiles;
   } catch (error) {
     console.error('Error in fetchComments:', error);
     return [];

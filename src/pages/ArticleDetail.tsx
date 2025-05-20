@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
 import CommentSection from "../components/comments/CommentSection";
-import { supabase } from "@/integrations/supabase/client";
 
 const ArticleDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -154,10 +153,13 @@ const ArticleDetail = () => {
   };
   
   const handleShare = async () => {
-    // Create shareable URL - no auth required
+    // Fix: Improve share functionality
     const shareUrl = window.location.href;
         
     try {
+      // First copy to clipboard regardless of native share availability
+      await navigator.clipboard.writeText(shareUrl);
+      
       // Use native share if available
       if (navigator.share) {
         await navigator.share({
@@ -167,9 +169,9 @@ const ArticleDetail = () => {
         });
         
         // Track successful share
-        if (article && user) {
+        if (article) {
           try {
-            await shareNews(article.id, user.id);
+            await shareNews(article.id, user?.id);
             toast({
               title: "Success",
               description: "Article shared successfully",
@@ -182,16 +184,13 @@ const ArticleDetail = () => {
         return;
       }
       
-      // Fallback to clipboard for desktop
-      await navigator.clipboard.writeText(shareUrl);
-      
-      // Open share modal with more options
+      // Open share modal for more options if native share isn't available
       setShareModalOpen(true);
       
       // Track share via copy to clipboard
-      if (article && user) {
+      if (article) {
         try {
-          await shareNews(article.id, user.id);
+          await shareNews(article.id, user?.id);
         } catch (error) {
           console.error("Failed to track share:", error);
         }
@@ -199,7 +198,7 @@ const ArticleDetail = () => {
       
       toast({
         title: "Link copied",
-        description: "Article link copied to clipboard. Choose a platform to share to.",
+        description: "Article link copied to clipboard",
         duration: 1500,
       });
     } catch (err) {
@@ -436,13 +435,15 @@ const ArticleDetail = () => {
       {isMobile ? (
         <Drawer open={commentsOpen} onOpenChange={setCommentsOpen}>
           <DrawerContent className="max-h-[85vh] px-0">
-            <DrawerHeader className="border-b">
+            <DrawerHeader className="border-b flex justify-between items-center">
               <DrawerTitle>Comments</DrawerTitle>
-              <DrawerClose className="absolute right-4 top-4">
-                <X className="h-4 w-4" />
+              <DrawerClose>
+                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                  <X className="h-4 w-4" />
+                </Button>
               </DrawerClose>
             </DrawerHeader>
-            <div className="px-4 py-2 overflow-y-auto h-full">
+            <div className="px-4 py-2 overflow-y-auto h-full max-h-[calc(85vh-60px)]">
               {article && <CommentSection newsId={article.id} onClose={handleCloseComments} />}
             </div>
           </DrawerContent>
@@ -451,6 +452,17 @@ const ArticleDetail = () => {
         commentsOpen && (
           <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
             <div className="w-full max-w-md bg-background h-full p-4 overflow-y-auto animate-in slide-in-from-right">
+              <div className="flex justify-between items-center mb-4 sticky top-0 bg-background z-10 p-2">
+                <h2 className="text-xl font-bold">Comments</h2>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleCloseComments}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
               {article && <CommentSection newsId={article.id} onClose={handleCloseComments} />}
             </div>
           </div>
@@ -480,6 +492,7 @@ const ArticleDetail = () => {
                 className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+                  shareNews(article?.id || '', user?.id, 'twitter');
                   setShareModalOpen(false);
                 }}
               >
@@ -490,6 +503,7 @@ const ArticleDetail = () => {
                 className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(window.location.href)}`, '_blank');
+                  shareNews(article?.id || '', user?.id, 'facebook');
                   setShareModalOpen(false);
                 }}
               >
@@ -502,6 +516,7 @@ const ArticleDetail = () => {
                 className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank');
+                  shareNews(article?.id || '', user?.id, 'linkedin');
                   setShareModalOpen(false);
                 }}
               >
@@ -514,6 +529,7 @@ const ArticleDetail = () => {
                 className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(article?.title || '')} ${encodeURIComponent(window.location.href)}`, '_blank');
+                  shareNews(article?.id || '', user?.id, 'whatsapp');
                   setShareModalOpen(false);
                 }}
               >
@@ -526,6 +542,7 @@ const ArticleDetail = () => {
                 className="flex flex-col items-center justify-center p-3 hover:bg-gray-100 rounded-lg"
                 onClick={() => {
                   window.open(`https://t.me/share/url?url=${encodeURIComponent(window.location.href)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
+                  shareNews(article?.id || '', user?.id, 'telegram');
                   setShareModalOpen(false);
                 }}
               >

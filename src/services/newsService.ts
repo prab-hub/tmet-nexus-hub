@@ -151,18 +151,45 @@ export async function bookmarkNews(newsId: string, userId: string) {
 
 export async function shareNews(newsId: string, userId?: string, platform?: string) {
   try {
+    // Fix: Set the proper payload structure
+    const payload = {
+      news_id: newsId,
+      user_id: userId || null,
+      platform: platform || null
+    };
+
     const { error } = await supabase
       .from('shares')
-      .insert({ 
-        news_id: newsId, 
-        user_id: userId || null,
-        platform
-      });
+      .insert(payload);
     
-    if (error) throw error;
+    if (error) {
+      console.error("Error sharing news:", error);
+      throw error;
+    }
+    
     return true;
   } catch (error) {
     console.error("Error sharing news:", error);
     throw error;
+  }
+}
+
+// New function to fetch the user's liked news articles
+export async function fetchUserLikedNews(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('likes')
+      .select('news_id')
+      .eq('user_id', userId);
+
+    if (error) {
+      console.error("Error fetching user likes:", error);
+      throw error;
+    }
+
+    return data?.map(like => like.news_id) || [];
+  } catch (error) {
+    console.error("Error in fetchUserLikedNews:", error);
+    return [];
   }
 }

@@ -49,13 +49,49 @@ export function useNews(category?: NewsCategory | 'all') {
   });
 }
 
+export async function checkUserInteractions(newsId: string, userId: string) {
+  try {
+    // Check likes
+    const { data: likeData, error: likeError } = await supabase
+      .from('likes')
+      .select('id')
+      .eq('news_id', newsId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (likeError) {
+      console.error("Error checking likes:", likeError);
+    }
+    
+    // Check bookmarks
+    const { data: bookmarkData, error: bookmarkError } = await supabase
+      .from('bookmarks')
+      .select('id')
+      .eq('news_id', newsId)
+      .eq('user_id', userId)
+      .maybeSingle();
+    
+    if (bookmarkError) {
+      console.error("Error checking bookmarks:", bookmarkError);
+    }
+    
+    return {
+      liked: !!likeData, 
+      bookmarked: !!bookmarkData
+    };
+  } catch (error) {
+    console.error("Error checking user interactions:", error);
+    return { liked: false, bookmarked: false };
+  }
+}
+
 export async function likeNews(newsId: string, userId: string) {
   try {
     const { data: existingLike } = await supabase
       .from('likes')
       .select('id')
       .match({ news_id: newsId, user_id: userId })
-      .single();
+      .maybeSingle();
 
     if (existingLike) {
       // User already liked this news, so remove the like
@@ -87,7 +123,7 @@ export async function bookmarkNews(newsId: string, userId: string) {
       .from('bookmarks')
       .select('id')
       .match({ news_id: newsId, user_id: userId })
-      .single();
+      .maybeSingle();
 
     if (existingBookmark) {
       // User already bookmarked this news, so remove the bookmark

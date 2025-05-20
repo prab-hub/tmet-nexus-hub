@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -18,9 +18,10 @@ import { supabase } from "@/integrations/supabase/client";
 
 interface CommentSectionProps {
   newsId: string;
+  onClose?: () => void;
 }
 
-const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
+const CommentSection: React.FC<CommentSectionProps> = ({ newsId, onClose }) => {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [newComment, setNewComment] = useState("");
   const [replyTo, setReplyTo] = useState<string | null>(null);
@@ -30,6 +31,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
   const { user, isAuthenticated } = useAuth();
   const { toast } = useToast();
   const [userProfiles, setUserProfiles] = useState<Record<string, any>>({});
+  const commentInputRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     loadComments();
@@ -110,7 +112,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
           ...comment,
           profile: userProfiles[user.id] || comment.profile
         };
-        setComments(prevComments => [updatedComment, ...prevComments]);
+        
+        // Add the new comment to the start of the array
+        if (replyTo) {
+          // For replies, reload comments to get the proper thread structure
+          await loadComments();
+        } else {
+          // For top-level comments, just add to the beginning of the array
+          setComments(prevComments => [updatedComment, ...prevComments]);
+        }
       }
       
       setNewComment("");
@@ -120,8 +130,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
         title: "Comment added",
         description: "Your comment has been posted",
       });
-      
-      loadComments(); // Reload comments to get proper thread structure
     } catch (error) {
       toast({
         title: "Error",
@@ -398,6 +406,20 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
 
   return (
     <div className="space-y-4">
+      {onClose && (
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="text-lg font-medium">Comments</h3>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            onClick={onClose}
+            className="p-2"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
+      )}
+      
       {isAuthenticated ? (
         <div className="flex gap-3 mb-6">
           <Avatar className="h-8 w-8">
@@ -409,6 +431,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ newsId }) => {
           </Avatar>
           <div className="flex-1 flex gap-2">
             <Textarea
+              ref={commentInputRef}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Write your comment..."

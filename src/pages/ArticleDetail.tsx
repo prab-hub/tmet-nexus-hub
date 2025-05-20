@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { ArrowLeft, Heart, MessageCircle, Bookmark, Share2, Send, X } from "luci
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "../services/authService";
-import { fetchNewsById, likeNews, bookmarkNews, shareNews, type News } from "../services/newsService";
+import { fetchNewsById, likeNews, bookmarkNews, shareNews, checkUserInteractions, type News } from "../services/newsService";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useIsMobile } from "../hooks/use-mobile";
 import { 
@@ -19,8 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerClose } from "@/components/ui/drawer";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import CommentSection from "../components/comments/CommentSection";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -55,33 +54,17 @@ const ArticleDetail = () => {
   // Check if the current user has liked or bookmarked this article
   useEffect(() => {
     if (isAuthenticated && user && article) {
-      const checkUserInteractions = async () => {
+      const checkInteractions = async () => {
         try {
-          // Check if user has liked this article
-          const { data: likeData } = await supabase
-            .from('likes')
-            .select('id')
-            .eq('news_id', article.id)
-            .eq('user_id', user.id)
-            .single();
-          
-          setLiked(!!likeData);
-          
-          // Check if user has bookmarked this article
-          const { data: bookmarkData } = await supabase
-            .from('bookmarks')
-            .select('id')
-            .eq('news_id', article.id)
-            .eq('user_id', user.id)
-            .single();
-          
-          setBookmarked(!!bookmarkData);
+          const interactions = await checkUserInteractions(article.id, user.id);
+          setLiked(interactions.liked);
+          setBookmarked(interactions.bookmarked);
         } catch (error) {
           console.error("Error checking user interactions:", error);
         }
       };
       
-      checkUserInteractions();
+      checkInteractions();
     }
   }, [isAuthenticated, user, article]);
   
@@ -171,99 +154,73 @@ const ArticleDetail = () => {
   };
   
   const handleShare = async () => {
-    requireAuth('share', async () => {
-      try {
-        // Create shareable URL
-        const shareUrl = window.location.href;
+    // Create shareable URL - no auth required
+    const shareUrl = window.location.href;
         
-        // Create a modal or dropdown for share options
-        const shareOptions = [
-          { name: 'Copy Link', action: async () => {
-            await navigator.clipboard.writeText(shareUrl);
-            toast({
-              title: "Link copied",
-              description: "Article link copied to clipboard",
-              duration: 1500,
-            });
-          }},
-          { name: 'X / Twitter', action: () => {
-            window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
-          }},
-          { name: 'Facebook', action: () => {
-            window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`, '_blank');
-          }},
-          { name: 'LinkedIn', action: () => {
-            window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`, '_blank');
-          }},
-          { name: 'WhatsApp', action: () => {
-            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(article?.title || '')} ${encodeURIComponent(shareUrl)}`, '_blank');
-          }},
-          { name: 'Telegram', action: () => {
-            window.open(`https://t.me/share/url?url=${encodeURIComponent(shareUrl)}&text=${encodeURIComponent(article?.title || '')}`, '_blank');
-          }}
-        ];
+    try {
+      // Use native share if available
+      if (navigator.share) {
+        await navigator.share({
+          title: article?.title || 'TMET Hub Article',
+          text: article?.summary || '',
+          url: shareUrl,
+        });
         
-        // Use native share if available
-        if (navigator.share) {
-          await navigator.share({
-            title: article?.title || 'TMET Hub Article',
-            text: article?.summary || '',
-            url: shareUrl,
-          });
-          
-          // Track successful share
-          if (article && user) {
-            try {
-              await shareNews(article.id, user.id);
-              toast({
-                title: "Success",
-                description: "Article shared successfully",
-                duration: 1500,
-              });
-            } catch (error) {
-              console.error("Failed to track share:", error);
-            }
-          }
-          return;
-        }
-        
-        // Fallback to our custom share UI - let's use copy link as default
-        await navigator.clipboard.writeText(shareUrl);
-        
-        // Create a popup with more share options
-        setShareModalOpen(true);
-        
-        // Track share via copy to clipboard
+        // Track successful share
         if (article && user) {
           try {
             await shareNews(article.id, user.id);
+            toast({
+              title: "Success",
+              description: "Article shared successfully",
+              duration: 1500,
+            });
           } catch (error) {
             console.error("Failed to track share:", error);
           }
         }
-        
-        toast({
-          title: "Link copied",
-          description: "Article link copied to clipboard. Choose a platform to share to.",
-          duration: 1500,
-        });
-      } catch (err) {
-        if ((err as Error).name !== 'AbortError') {
-          toast({
-            title: "Share failed",
-            description: "Could not share the article. Try copying the link manually.",
-            duration: 1500,
-            variant: "destructive"
-          });
+        return;
+      }
+      
+      // Fallback to clipboard for desktop
+      await navigator.clipboard.writeText(shareUrl);
+      
+      // Open share modal with more options
+      setShareModalOpen(true);
+      
+      // Track share via copy to clipboard
+      if (article && user) {
+        try {
+          await shareNews(article.id, user.id);
+        } catch (error) {
+          console.error("Failed to track share:", error);
         }
       }
-    });
+      
+      toast({
+        title: "Link copied",
+        description: "Article link copied to clipboard. Choose a platform to share to.",
+        duration: 1500,
+      });
+    } catch (err) {
+      console.error("Share error:", err);
+      toast({
+        title: "Share failed",
+        description: "Could not share the article. Try copying the link manually.",
+        duration: 1500,
+        variant: "destructive"
+      });
+    }
   };
   
   const handleComment = () => {
     requireAuth('comment', () => {
       setCommentsOpen(true);
     });
+  };
+
+  const handleCloseComments = () => {
+    setCommentsOpen(false);
   };
 
   const navigateToAuth = () => {
@@ -486,7 +443,7 @@ const ArticleDetail = () => {
               </DrawerClose>
             </DrawerHeader>
             <div className="px-4 py-2 overflow-y-auto h-full">
-              {article && <CommentSection newsId={article.id} />}
+              {article && <CommentSection newsId={article.id} onClose={handleCloseComments} />}
             </div>
           </DrawerContent>
         </Drawer>
@@ -494,17 +451,7 @@ const ArticleDetail = () => {
         commentsOpen && (
           <div className="fixed inset-0 bg-black/30 z-50 flex justify-end">
             <div className="w-full max-w-md bg-background h-full p-4 overflow-y-auto animate-in slide-in-from-right">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">Comments</h3>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setCommentsOpen(false)}
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
-              {article && <CommentSection newsId={article.id} />}
+              {article && <CommentSection newsId={article.id} onClose={handleCloseComments} />}
             </div>
           </div>
         )

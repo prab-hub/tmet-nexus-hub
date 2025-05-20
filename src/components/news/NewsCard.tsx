@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { useAuth } from "../../services/authService";
 import { useNavigate } from "react-router-dom";
 import type { News } from "../../services/newsService";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -35,6 +37,39 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
   const [authAction, setAuthAction] = useState<'like' | 'comment' | 'bookmark' | 'share'>('like');
   const { user, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  // Check if the current user has liked or bookmarked this article
+  useEffect(() => {
+    if (isAuthenticated && user && news) {
+      const checkUserInteractions = async () => {
+        try {
+          // Check if user has liked this article
+          const { data: likeData } = await supabase
+            .from('likes')
+            .select('id')
+            .eq('news_id', news.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          setLiked(!!likeData);
+          
+          // Check if user has bookmarked this article
+          const { data: bookmarkData } = await supabase
+            .from('bookmarks')
+            .select('id')
+            .eq('news_id', news.id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+          
+          setBookmarked(!!bookmarkData);
+        } catch (error) {
+          console.error("Error checking user interactions:", error);
+        }
+      };
+      
+      checkUserInteractions();
+    }
+  }, [isAuthenticated, user, news]);
   
   const handleClick = () => {
     // Navigate to the article detail page when clicked
@@ -113,72 +148,71 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
   const handleShare = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event bubbling
     
-    requireAuth('share', () => {
-      try {
-        // Create the URL to be shared
-        const shareUrl = `${window.location.origin}/article/${news.id}`;
-        
-        // Use navigator.share if available (mobile devices primarily)
-        if (navigator.share) {
-          navigator.share({
-            title: news.title,
-            text: news.summary || '',
-            url: shareUrl,
-          })
-          .then(() => {
-            // Track share in the database
+    // Create shareable URL - no auth required
+    const shareUrl = `${window.location.origin}/article/${news.id}`;
+    
+    try {
+      // Use navigator.share if available (mobile devices primarily)
+      if (navigator.share) {
+        navigator.share({
+          title: news.title,
+          text: news.summary || '',
+          url: shareUrl,
+        })
+        .then(() => {
+          // Track share in the database if user is logged in
+          if (isAuthenticated && user) {
             import("../../services/newsService").then(({ shareNews }) => {
-              if (user) {
-                shareNews(news.id, user?.id).catch(error => {
-                  console.error("Failed to track share:", error);
-                });
-              }
-            });
-            
-            toast({
-              title: "Success",
-              description: "Article shared successfully",
-              duration: 1500,
-            });
-          })
-          .catch(error => {
-            if (error.name !== 'AbortError') {
-              // Copy to clipboard as fallback
-              navigator.clipboard.writeText(shareUrl);
-              toast({
-                title: "Link copied",
-                description: "Article link copied to clipboard",
-                duration: 1500,
-              });
-            }
-          });
-        } else {
-          // Fallback for browsers that don't support Web Share API
-          navigator.clipboard.writeText(shareUrl);
-          toast({
-            title: "Link copied",
-            description: "Article link copied to clipboard",
-            duration: 1500,
-          });
-          
-          // Track share in the database
-          import("../../services/newsService").then(({ shareNews }) => {
-            if (user) {
               shareNews(news.id, user?.id).catch(error => {
                 console.error("Failed to track share:", error);
               });
-            }
+            });
+          }
+          
+          toast({
+            title: "Success",
+            description: "Article shared successfully",
+            duration: 1500,
           });
-        }
-      } catch (error) {
+        })
+        .catch(error => {
+          if (error.name !== 'AbortError') {
+            // Copy to clipboard as fallback
+            navigator.clipboard.writeText(shareUrl);
+            toast({
+              title: "Link copied",
+              description: "Article link copied to clipboard",
+              duration: 1500,
+            });
+          }
+        });
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        navigator.clipboard.writeText(shareUrl);
         toast({
-          title: "Share failed",
-          description: "Could not share the article",
-          variant: "destructive",
+          title: "Link copied",
+          description: "Article link copied to clipboard",
           duration: 1500,
         });
+        
+        // Track share in the database if user is logged in
+        if (isAuthenticated && user) {
+          import("../../services/newsService").then(({ shareNews }) => {
+            shareNews(news.id, user?.id).catch(error => {
+              console.error("Failed to track share:", error);
+            });
+          });
+        }
       }
-    });
+    } catch (error) {
+      console.error("Share error:", error);
+      toast({
+        title: "Share failed",
+        description: "Could not share the article. Try copying the link manually.",
+        duration: 1500,
+        variant: "destructive"
+      });
+    }
   };
 
   const handleComment = (e: React.MouseEvent) => {

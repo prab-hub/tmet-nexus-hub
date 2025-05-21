@@ -39,6 +39,14 @@ const NewsFeed = () => {
     }
   }, [news]);
 
+  // Debug logging to check what's happening
+  useEffect(() => {
+    console.log("News data:", news);
+    console.log("Is loading:", isLoading);
+    console.log("Is mobile:", isMobile);
+    console.log("Active index:", activeIndex);
+  }, [news, isLoading, isMobile, activeIndex]);
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     if (!news || news.length === 0) return;
     
@@ -47,7 +55,7 @@ const NewsFeed = () => {
     const itemHeight = container.clientHeight;
     
     // Calculate which news item should be active based on scroll position
-    const itemsPerScreen = isMobile ? 2 : 1;
+    const itemsPerScreen = isMobile ? 1 : 1; // Set to 1 for consistent behavior
     const screenHeight = itemHeight / itemsPerScreen;
     
     const newIndex = Math.floor(scrollPosition / screenHeight);
@@ -79,9 +87,10 @@ const NewsFeed = () => {
   if (!news || news.length === 0) {
     return <NewsEmptyState navigate={navigate} />;
   }
-  
-  // Calculate height for news items - this ensures mobile shows 2 items per screen
-  const itemHeight = isMobile ? 'h-1/2' : 'h-screen';
+
+  // All news items should be visible regardless of device type
+  // Each item takes full height on desktop, full height on mobile too
+  const itemHeight = 'h-screen';
   
   return (
     <div className="h-screen w-full relative overflow-hidden">
@@ -101,7 +110,7 @@ const NewsFeed = () => {
               >
                 <NewsCard 
                   news={newsItem} 
-                  isActive={activeIndex === index}
+                  isActive={true} // Always set to true to ensure visibility on mobile
                   isMobile={isMobile}
                 />
               </div>

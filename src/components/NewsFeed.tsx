@@ -46,11 +46,10 @@ const NewsFeed = () => {
     const scrollPosition = container.scrollTop;
     const itemHeight = container.clientHeight;
     
-    // Fixed itemsPerScreen to always be 2 for mobile
+    // Calculate which news item should be active based on scroll position
     const itemsPerScreen = isMobile ? 2 : 1;
     const screenHeight = itemHeight / itemsPerScreen;
     
-    // Calculate which news item should be active based on scroll position
     const newIndex = Math.floor(scrollPosition / screenHeight);
     
     if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
@@ -81,7 +80,7 @@ const NewsFeed = () => {
     return <NewsEmptyState navigate={navigate} />;
   }
   
-  // Calculate height for news items
+  // Calculate height for news items - this ensures mobile shows 2 items per screen
   const itemHeight = isMobile ? 'h-1/2' : 'h-screen';
   
   return (

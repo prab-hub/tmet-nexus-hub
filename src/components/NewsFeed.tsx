@@ -37,7 +37,9 @@ const NewsFeed = () => {
     const container = event.currentTarget;
     const scrollPosition = container.scrollTop;
     const itemHeight = container.clientHeight;
-    const itemsPerScreen = isMobile ? 2 : 1; // Show 2 items per screen on mobile
+    
+    // Fixed itemsPerScreen to always be 2 for mobile
+    const itemsPerScreen = isMobile ? 2 : 1;
     const screenHeight = itemHeight / itemsPerScreen;
     
     // Calculate which news item should be active based on scroll position
@@ -82,12 +84,12 @@ const NewsFeed = () => {
           {news?.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
-              className="h-screen w-full flex-shrink-0 snap-start"
+              className={`${isMobile ? 'h-1/2' : 'h-screen'} w-full flex-shrink-0 snap-start`}
               id={`news-item-${index}`}
             >
               <NewsCard 
                 news={newsItem} 
-                isActive={isMobile ? true : index === activeIndex}
+                isActive={true}
                 isMobile={isMobile}
               />
             </div>

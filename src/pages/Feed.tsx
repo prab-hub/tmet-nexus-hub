@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from "react";
 import NewsFeed from "../components/NewsFeed";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 
 const Feed = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { toast } = useToast();
   const [showToast, setShowToast] = useState(false);
   
@@ -18,8 +19,21 @@ const Feed = () => {
         duration: 3000,
       });
       setShowToast(true);
+      
+      // Clear the state to prevent showing the toast again on refresh
+      window.history.replaceState({}, document.title);
     }
-  }, [location, toast, showToast]);
+    
+    // Clear any openComments parameter from the URL when returning to feed
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.has("openComments")) {
+      searchParams.delete("openComments");
+      navigate({
+        pathname: location.pathname,
+        search: searchParams.toString()
+      }, { replace: true });
+    }
+  }, [location, toast, showToast, navigate]);
 
   return (
     <div className="w-full h-full">

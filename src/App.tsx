@@ -13,11 +13,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<NewsLayout><Feed /></NewsLayout>} />
+        <Route path="/" element={<NewsLayout key="feed"><Feed /></NewsLayout>} />
         <Route path="/auth" element={<Auth />} />
         <Route path="/home" element={<Index />} />
-        <Route path="/article/:id" element={<NewsLayout><ArticleDetail /></NewsLayout>} />
-        <Route path="/profile" element={<NewsLayout><Profile /></NewsLayout>} />
+        <Route path="/article/:id" element={<NewsLayout key="article"><ArticleDetail /></NewsLayout>} />
+        <Route path="/profile" element={<NewsLayout key="profile"><Profile /></NewsLayout>} />
         <Route path="*" element={<NotFound />} />
       </Routes>
       <Toaster />

@@ -35,6 +35,14 @@ const Feed = () => {
     }
   }, [location, toast, showToast, navigate]);
 
+  // Force component remounting when returning from article detail
+  useEffect(() => {
+    return () => {
+      // Clean up function runs when component unmounts
+      setShowToast(false);
+    };
+  }, []);
+
   return (
     <div className="w-full h-full">
       <NewsFeed />

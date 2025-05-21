@@ -10,6 +10,7 @@ import { NewsEmptyState, NewsLoadingState, NewsErrorState } from "./news/NewsSta
 const NewsFeed = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [previousIndex, setPreviousIndex] = useState(0);
+  const [isLoaded, setIsLoaded] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement | null>(null);
   
   const location = useLocation();
@@ -31,6 +32,13 @@ const NewsFeed = () => {
     }
   }, [categoryFilter]);
   
+  // Set isLoaded to true after data is fetched
+  useEffect(() => {
+    if (news && news.length > 0) {
+      setIsLoaded(true);
+    }
+  }, [news]);
+
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
     if (!news || news.length === 0) return;
     
@@ -73,18 +81,22 @@ const NewsFeed = () => {
     return <NewsEmptyState navigate={navigate} />;
   }
   
+  // Calculate height for news items
+  const itemHeight = isMobile ? 'h-1/2' : 'h-screen';
+  
   return (
     <div className="h-screen w-full relative overflow-hidden">
       <div 
         className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide snap-y snap-mandatory" 
         onScroll={handleScroll}
         ref={scrollContainerRef}
+        data-loaded={isLoaded}
       >
         <div className="flex flex-col">
           {news?.map((newsItem, index) => (
             <div 
               key={newsItem.id} 
-              className={`${isMobile ? 'h-1/2' : 'h-screen'} w-full flex-shrink-0 snap-start`}
+              className={`${itemHeight} w-full flex-shrink-0 snap-start`}
               id={`news-item-${index}`}
             >
               <NewsCard 

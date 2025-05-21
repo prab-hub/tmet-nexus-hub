@@ -91,27 +91,33 @@ const NewsFeed = () => {
         ref={scrollContainerRef}
         data-loaded={isLoaded}
       >
-        <div className="flex flex-col">
-          {news?.map((newsItem, index) => (
-            <div 
-              key={newsItem.id} 
-              className={`${itemHeight} w-full flex-shrink-0 snap-start`}
-              id={`news-item-${index}`}
-            >
-              <NewsCard 
-                news={newsItem} 
-                isActive={true}
-                isMobile={isMobile}
-              />
-            </div>
-          ))}
-        </div>
+        {news && news.length > 0 ? (
+          <div className="flex flex-col">
+            {news.map((newsItem, index) => (
+              <div 
+                key={newsItem.id} 
+                className={`${itemHeight} w-full flex-shrink-0 snap-start`}
+                id={`news-item-${index}`}
+              >
+                <NewsCard 
+                  news={newsItem} 
+                  isActive={activeIndex === index}
+                  isMobile={isMobile}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <p className="text-lg text-gray-500">No news available</p>
+          </div>
+        )}
       </div>
       
       {/* Scroll indicator - only show on desktop */}
-      {!isMobile && (
+      {!isMobile && news && news.length > 0 && (
         <NewsScrollIndicator 
-          total={news?.length || 0} 
+          total={news.length} 
           activeIndex={activeIndex}
           onIndicatorClick={handleIndicatorClick}
         />

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type NewsCategory } from "../services/newsService";
@@ -84,16 +85,6 @@ const NewsFeed = () => {
     return <NewsEmptyState navigate={navigate} />;
   }
 
-  // For mobile, let images maintain their natural aspect ratio
-  // For desktop, keep full height
-  const getItemHeight = () => {
-    if (isMobile) {
-      return 'h-auto'; // Let height be determined by content
-    } else {
-      return 'h-screen'; // Full height on desktop
-    }
-  };
-  
   return (
     <div className="h-screen w-full relative overflow-hidden">
       <div 
@@ -107,12 +98,12 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`${getItemHeight()} w-full flex-shrink-0 ${isMobile ? '' : 'snap-start'}`}
+                className={`w-full flex-shrink-0 ${isMobile ? 'h-auto' : 'h-screen snap-start'}`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 
                   news={newsItem} 
-                  isActive={true} // Always active for visibility
+                  isActive={true}
                   isMobile={isMobile}
                 />
               </div>

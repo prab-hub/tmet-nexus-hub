@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type NewsCategory } from "../services/newsService";
@@ -55,7 +54,6 @@ const NewsFeed = () => {
     const containerHeight = container.clientHeight;
     
     // Calculate which news item should be active based on scroll position
-    // For mobile, use a different calculation method to account for card size
     const newIndex = Math.floor(scrollPosition / containerHeight);
     
     if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
@@ -86,11 +84,11 @@ const NewsFeed = () => {
     return <NewsEmptyState navigate={navigate} />;
   }
 
-  // Calculate the height for news items based on device type
-  // For mobile, use proper sizing to fit images within the viewport
+  // For mobile, let images maintain their natural aspect ratio
+  // For desktop, keep full height
   const getItemHeight = () => {
     if (isMobile) {
-      return 'h-auto max-h-screen min-h-[50vh]'; // Adaptable height on mobile
+      return 'h-auto'; // Let height be determined by content
     } else {
       return 'h-screen'; // Full height on desktop
     }
@@ -109,12 +107,12 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`${getItemHeight()} w-full flex-shrink-0 snap-start`}
+                className={`${getItemHeight()} w-full flex-shrink-0 ${isMobile ? '' : 'snap-start'}`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 
                   news={newsItem} 
-                  isActive={true} // Always show active to ensure visibility on mobile
+                  isActive={true} // Always active for visibility
                   isMobile={isMobile}
                 />
               </div>

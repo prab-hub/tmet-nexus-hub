@@ -98,7 +98,7 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`w-full flex-shrink-0 ${isMobile ? 'h-auto' : 'h-screen snap-start'}`}
+                className={`w-full flex-shrink-0 ${isMobile ? 'min-h-screen' : 'h-screen snap-start'}`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 

@@ -52,13 +52,11 @@ const NewsFeed = () => {
     
     const container = event.currentTarget;
     const scrollPosition = container.scrollTop;
-    const itemHeight = container.clientHeight;
+    const containerHeight = container.clientHeight;
     
     // Calculate which news item should be active based on scroll position
-    const itemsPerScreen = isMobile ? 1 : 1; // Set to 1 for consistent behavior
-    const screenHeight = itemHeight / itemsPerScreen;
-    
-    const newIndex = Math.floor(scrollPosition / screenHeight);
+    // For mobile, use a different calculation method to account for card size
+    const newIndex = Math.floor(scrollPosition / containerHeight);
     
     if (newIndex !== activeIndex && news && newIndex >= 0 && newIndex < news.length) {
       setPreviousIndex(activeIndex);
@@ -88,9 +86,15 @@ const NewsFeed = () => {
     return <NewsEmptyState navigate={navigate} />;
   }
 
-  // All news items should be visible regardless of device type
-  // Each item takes full height on desktop, full height on mobile too
-  const itemHeight = 'h-screen';
+  // Calculate the height for news items based on device type
+  // For mobile, use proper sizing to fit images within the viewport
+  const getItemHeight = () => {
+    if (isMobile) {
+      return 'h-auto max-h-screen min-h-[50vh]'; // Adaptable height on mobile
+    } else {
+      return 'h-screen'; // Full height on desktop
+    }
+  };
   
   return (
     <div className="h-screen w-full relative overflow-hidden">
@@ -105,12 +109,12 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`${itemHeight} w-full flex-shrink-0 snap-start`}
+                className={`${getItemHeight()} w-full flex-shrink-0 snap-start`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 
                   news={newsItem} 
-                  isActive={true} // Always set to true to ensure visibility on mobile
+                  isActive={true} // Always show active to ensure visibility on mobile
                   isMobile={isMobile}
                 />
               </div>

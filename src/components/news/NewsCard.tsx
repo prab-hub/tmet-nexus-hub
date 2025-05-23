@@ -280,16 +280,16 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
   // Always prioritize the original image URL first, then fallback if there's an error
   const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
   
-  // Mobile layout - updated to match expected design
+  // Mobile layout - 2 news items per screen with smaller images
   if (isMobile) {
     return (
       <>
         <div 
-          className="h-screen w-full overflow-hidden relative cursor-pointer"
+          className="h-[50vh] w-full overflow-hidden relative cursor-pointer border-b border-gray-200"
           onClick={() => navigate(`/article/${news.id}`)}
         >
-          {/* Full screen background image */}
-          <div className="absolute inset-0">
+          {/* Smaller image container */}
+          <div className="h-48 w-full overflow-hidden relative">
             <img 
               src={imageUrl} 
               alt={news.title}
@@ -297,83 +297,83 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
               onError={handleImageError}
               key={`${imageUrl}-${retryCount}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
           </div>
           
-          {/* Content overlay at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+          {/* Content below image */}
+          <div className="p-4 bg-white flex-1 flex flex-col">
             {/* Source info */}
-            <div className="flex items-center mb-4">
+            <div className="flex items-center mb-2">
               <img 
                 src={news.source_image_url || 'https://placehold.co/50?text=News'} 
                 alt={news.source || ''} 
-                className="w-10 h-10 rounded-full mr-3 object-cover border border-white/20"
+                className="w-6 h-6 rounded-full mr-2 object-cover"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
                 }}
               />
-              <span className="text-white font-medium text-base">{news.source || 'Unknown Source'}</span>
-              <span className="text-white/70 text-sm ml-auto">{formatDate(news.news_date)}</span>
+              <span className="text-gray-600 text-sm font-medium">{news.source || 'Unknown Source'}</span>
+              <span className="text-gray-400 text-xs ml-auto">{formatDate(news.news_date)}</span>
             </div>
             
-            {/* Title and summary */}
-            <h2 className="text-white font-bold text-2xl mb-3 leading-tight">{news.title}</h2>
-            <p className="text-white/90 text-base mb-6 line-clamp-3">{news.summary || ''}</p>
+            {/* Title */}
+            <h2 className="text-gray-900 font-bold text-lg mb-2 leading-tight line-clamp-2">{news.title}</h2>
             
-            {/* Category badge */}
-            <div className="mb-6">
-              {news.categories && news.categories.slice(0, 1).map((category) => (
-                <Badge key={category} className="bg-white/20 text-white text-sm border-white/30 px-3 py-1">
-                  {category}
-                </Badge>
-              ))}
-            </div>
+            {/* Summary */}
+            <p className="text-gray-600 text-sm mb-3 line-clamp-2 flex-1">{news.summary || ''}</p>
             
-            {/* Action buttons */}
+            {/* Category badge and actions */}
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-8">
+              <div>
+                {news.categories && news.categories.slice(0, 1).map((category) => (
+                  <Badge key={category} className="bg-primary/10 text-primary text-xs px-2 py-1">
+                    {category}
+                  </Badge>
+                ))}
+              </div>
+              
+              {/* Action buttons */}
+              <div className="flex items-center space-x-4">
                 <button 
-                  className={`flex items-center space-x-2 ${liked ? 'text-red-400' : 'text-white'}`}
+                  className={`flex items-center space-x-1 ${liked ? 'text-red-500' : 'text-gray-500'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleLike(e);
                   }}
                 >
-                  <Heart className="h-6 w-6" fill={liked ? "currentColor" : "none"} />
-                  <span className="text-base font-medium">{likes}</span>
+                  <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} />
+                  <span className="text-xs">{likes}</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-2 text-white"
+                  className="flex items-center space-x-1 text-gray-500"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleComment(e);
                   }}
                 >
-                  <MessageCircle className="h-6 w-6" />
-                  <span className="text-base font-medium">{news.comments_count || 0}</span>
+                  <MessageCircle className="h-4 w-4" />
+                  <span className="text-xs">{news.comments_count || 0}</span>
                 </button>
-              </div>
-              
-              <div className="flex items-center space-x-8">
+                
                 <button 
-                  className={`${bookmarked ? 'text-yellow-400' : 'text-white'}`}
+                  className={`${bookmarked ? 'text-yellow-500' : 'text-gray-500'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleBookmark(e);
                   }}
                 >
-                  <Bookmark className="h-6 w-6" fill={bookmarked ? "currentColor" : "none"} />
+                  <Bookmark className="h-4 w-4" fill={bookmarked ? "currentColor" : "none"} />
                 </button>
                 
                 <button 
-                  className="text-white"
+                  className="text-gray-500"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleShare(e);
                   }}
                 >
-                  <Share2 className="h-6 w-6" />
+                  <Share2 className="h-4 w-4" />
                 </button>
               </div>
             </div>

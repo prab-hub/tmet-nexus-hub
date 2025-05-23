@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useNews, type NewsCategory } from "../services/newsService";
@@ -100,7 +99,7 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`w-full flex-shrink-0 ${isMobile ? 'h-screen' : 'h-screen snap-start'}`}
+                className={`w-full flex-shrink-0 ${isMobile ? 'h-[50vh]' : 'h-screen snap-start'}`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 

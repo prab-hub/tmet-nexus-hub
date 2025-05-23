@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Heart, MessageCircle, Bookmark, Share2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
@@ -281,15 +280,15 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
   // Always prioritize the original image URL first, then fallback if there's an error
   const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
   
-  // For mobile, we'll use a slightly different layout with two items per screen
+  // Mobile layout - fixed to display properly
   if (isMobile) {
     return (
       <>
-        <Card 
-          className="h-full w-full overflow-hidden relative rounded-none border-0 cursor-pointer"
+        <div 
+          className="h-screen w-full overflow-hidden relative cursor-pointer"
           onClick={() => navigate(`/article/${news.id}`)}
         >
-          {/* Image container with full height */}
+          {/* Full screen background image */}
           <div className="absolute inset-0">
             <img 
               src={imageUrl} 
@@ -298,90 +297,88 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
               onError={handleImageError}
               key={`${imageUrl}-${retryCount}`}
             />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
           </div>
           
-          {/* Content overlay */}
-          <div className="absolute inset-0 flex flex-col justify-end p-4">
-            <div className="mb-2">
-              <div className="flex items-center mb-2">
-                <img 
-                  src={news.source_image_url || 'https://placehold.co/50?text=News'} 
-                  alt={news.source || ''} 
-                  className="w-6 h-6 rounded-full mr-2 object-cover border border-white/20"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
+          {/* Content overlay at bottom */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+            {/* Source info */}
+            <div className="flex items-center mb-3">
+              <img 
+                src={news.source_image_url || 'https://placehold.co/50?text=News'} 
+                alt={news.source || ''} 
+                className="w-8 h-8 rounded-full mr-3 object-cover border border-white/20"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
+                }}
+              />
+              <span className="text-white font-medium text-sm">{news.source || 'Unknown Source'}</span>
+              <span className="text-white/70 text-sm ml-auto">{formatDate(news.news_date)}</span>
+            </div>
+            
+            {/* Title and summary */}
+            <h2 className="text-white font-bold text-xl mb-2 leading-tight">{news.title}</h2>
+            <p className="text-white/90 text-sm mb-4 line-clamp-2">{news.summary || ''}</p>
+            
+            {/* Category badge */}
+            <div className="mb-4">
+              {news.categories && news.categories.slice(0, 1).map((category) => (
+                <Badge key={category} className="bg-white/20 text-white text-xs border-white/30">
+                  {category}
+                </Badge>
+              ))}
+            </div>
+            
+            {/* Action buttons */}
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-6">
+                <button 
+                  className={`flex items-center space-x-1 ${liked ? 'text-red-400' : 'text-white'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLike(e);
                   }}
-                />
-                <span className="text-white/90 text-xs font-medium">{news.source || 'Unknown Source'}</span>
-                <span className="text-white/70 text-xs ml-auto">{formatDate(news.news_date)}</span>
+                >
+                  <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
+                  <span className="text-sm">{likes}</span>
+                </button>
+                
+                <button 
+                  className="flex items-center space-x-1 text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleComment(e);
+                  }}
+                >
+                  <MessageCircle className="h-5 w-5" />
+                  <span className="text-sm">{news.comments_count || 0}</span>
+                </button>
               </div>
-              <h2 className="text-white font-bold text-base mb-1 line-clamp-2">{news.title}</h2>
-              <p className="text-white/80 text-xs line-clamp-2">{news.summary || ''}</p>
               
-              <div className="mt-2 flex flex-wrap gap-1">
-                {news.categories && news.categories.slice(0, 1).map((category) => (
-                  <Badge key={category} className="bg-primary/20 text-white text-xs py-0">
-                    {category}
-                  </Badge>
-                ))}
+              <div className="flex items-center space-x-6">
+                <button 
+                  className={`${bookmarked ? 'text-yellow-400' : 'text-white'}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleBookmark(e);
+                  }}
+                >
+                  <Bookmark className="h-5 w-5" fill={bookmarked ? "currentColor" : "none"} />
+                </button>
+                
+                <button 
+                  className="text-white"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleShare(e);
+                  }}
+                >
+                  <Share2 className="h-5 w-5" />
+                </button>
               </div>
             </div>
           </div>
-
-          {/* Action buttons */}
-          <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-2 bg-gradient-to-t from-black to-transparent">
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`p-1 ${liked ? 'text-red-500' : 'text-white'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleLike(e);
-                }}
-              >
-                <Heart className="h-4 w-4" fill={liked ? "currentColor" : "none"} />
-                <span className="ml-1 text-xs">{likes}</span>
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-1 text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleComment(e);
-                }}
-              >
-                <MessageCircle className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="flex items-center space-x-2">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className={`p-1 ${bookmarked ? 'text-yellow-500' : 'text-white'}`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleBookmark(e);
-                }}
-              >
-                <Bookmark className="h-4 w-4" fill={bookmarked ? "currentColor" : "none"} />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="p-1 text-white"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleShare(e);
-                }}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </Card>
+        </div>
         
         {/* Authentication Dialog */}
         <AlertDialog open={authDialogOpen} onOpenChange={setAuthDialogOpen}>
@@ -405,7 +402,7 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
     );
   }
   
-  // Desktop version remains similar to before
+  // Desktop version remains the same
   return (
     <>
       <Card 

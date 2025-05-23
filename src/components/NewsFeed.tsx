@@ -47,22 +47,6 @@ const NewsFeed = () => {
     console.log("Active index:", activeIndex);
     console.log("Viewport height:", window.innerHeight);
     console.log("Viewport width:", window.innerWidth);
-    
-    // Force reflow after component mounts to ensure proper sizing
-    const handleResize = () => {
-      if (scrollContainerRef.current) {
-        scrollContainerRef.current.style.height = `${window.innerHeight}px`;
-      }
-    };
-    
-    // Call once on mount
-    handleResize();
-    
-    // Add event listener
-    window.addEventListener('resize', handleResize);
-    
-    // Clean up
-    return () => window.removeEventListener('resize', handleResize);
   }, [news, isLoading, isMobile, activeIndex]);
 
   const handleScroll = (event: React.UIEvent<HTMLDivElement>) => {
@@ -110,24 +94,14 @@ const NewsFeed = () => {
         onScroll={handleScroll}
         ref={scrollContainerRef}
         data-loaded={isLoaded}
-        style={{ 
-          height: '100vh',
-          minHeight: '100vh',
-          maxHeight: '-webkit-fill-available'
-        }}
       >
         {news && news.length > 0 ? (
           <div className="flex flex-col">
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`w-full flex-shrink-0 ${isMobile ? 'min-h-[100vh]' : 'h-screen snap-start'}`}
+                className={`w-full flex-shrink-0 ${isMobile ? 'min-h-screen' : 'h-screen snap-start'}`}
                 id={`news-item-${index}`}
-                style={{ 
-                  height: isMobile ? '100vh' : 'auto',
-                  minHeight: isMobile ? '100vh' : 'auto',
-                  maxHeight: isMobile ? '-webkit-fill-available' : 'auto'
-                }}
               >
                 <NewsCard 
                   news={newsItem} 

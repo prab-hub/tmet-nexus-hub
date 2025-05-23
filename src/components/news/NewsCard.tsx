@@ -280,7 +280,7 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
   // Always prioritize the original image URL first, then fallback if there's an error
   const imageUrl = imageError ? getBackupImage() : (news.image_url || getBackupImage());
   
-  // Mobile layout - fixed to display properly
+  // Mobile layout - updated to match expected design
   if (isMobile) {
     return (
       <>
@@ -301,29 +301,29 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
           </div>
           
           {/* Content overlay at bottom */}
-          <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             {/* Source info */}
-            <div className="flex items-center mb-3">
+            <div className="flex items-center mb-4">
               <img 
                 src={news.source_image_url || 'https://placehold.co/50?text=News'} 
                 alt={news.source || ''} 
-                className="w-8 h-8 rounded-full mr-3 object-cover border border-white/20"
+                className="w-10 h-10 rounded-full mr-3 object-cover border border-white/20"
                 onError={(e) => {
                   (e.target as HTMLImageElement).src = "https://placehold.co/50?text=News";
                 }}
               />
-              <span className="text-white font-medium text-sm">{news.source || 'Unknown Source'}</span>
+              <span className="text-white font-medium text-base">{news.source || 'Unknown Source'}</span>
               <span className="text-white/70 text-sm ml-auto">{formatDate(news.news_date)}</span>
             </div>
             
             {/* Title and summary */}
-            <h2 className="text-white font-bold text-xl mb-2 leading-tight">{news.title}</h2>
-            <p className="text-white/90 text-sm mb-4 line-clamp-2">{news.summary || ''}</p>
+            <h2 className="text-white font-bold text-2xl mb-3 leading-tight">{news.title}</h2>
+            <p className="text-white/90 text-base mb-6 line-clamp-3">{news.summary || ''}</p>
             
             {/* Category badge */}
-            <div className="mb-4">
+            <div className="mb-6">
               {news.categories && news.categories.slice(0, 1).map((category) => (
-                <Badge key={category} className="bg-white/20 text-white text-xs border-white/30">
+                <Badge key={category} className="bg-white/20 text-white text-sm border-white/30 px-3 py-1">
                   {category}
                 </Badge>
               ))}
@@ -331,31 +331,31 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
             
             {/* Action buttons */}
             <div className="flex justify-between items-center">
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-8">
                 <button 
-                  className={`flex items-center space-x-1 ${liked ? 'text-red-400' : 'text-white'}`}
+                  className={`flex items-center space-x-2 ${liked ? 'text-red-400' : 'text-white'}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     handleLike(e);
                   }}
                 >
-                  <Heart className="h-5 w-5" fill={liked ? "currentColor" : "none"} />
-                  <span className="text-sm">{likes}</span>
+                  <Heart className="h-6 w-6" fill={liked ? "currentColor" : "none"} />
+                  <span className="text-base font-medium">{likes}</span>
                 </button>
                 
                 <button 
-                  className="flex items-center space-x-1 text-white"
+                  className="flex items-center space-x-2 text-white"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleComment(e);
                   }}
                 >
-                  <MessageCircle className="h-5 w-5" />
-                  <span className="text-sm">{news.comments_count || 0}</span>
+                  <MessageCircle className="h-6 w-6" />
+                  <span className="text-base font-medium">{news.comments_count || 0}</span>
                 </button>
               </div>
               
-              <div className="flex items-center space-x-6">
+              <div className="flex items-center space-x-8">
                 <button 
                   className={`${bookmarked ? 'text-yellow-400' : 'text-white'}`}
                   onClick={(e) => {
@@ -363,7 +363,7 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
                     handleBookmark(e);
                   }}
                 >
-                  <Bookmark className="h-5 w-5" fill={bookmarked ? "currentColor" : "none"} />
+                  <Bookmark className="h-6 w-6" fill={bookmarked ? "currentColor" : "none"} />
                 </button>
                 
                 <button 
@@ -373,7 +373,7 @@ const NewsCard = ({ news, isActive, isMobile }: NewsCardProps) => {
                     handleShare(e);
                   }}
                 >
-                  <Share2 className="h-5 w-5" />
+                  <Share2 className="h-6 w-6" />
                 </button>
               </div>
             </div>

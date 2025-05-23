@@ -90,7 +90,7 @@ const NewsFeed = () => {
   return (
     <div className="h-screen w-full relative overflow-hidden">
       <div 
-        className="h-full w-full overflow-y-auto scroll-smooth scrollbar-hide snap-y snap-mandatory" 
+        className={`h-full w-full overflow-y-auto scroll-smooth scrollbar-hide ${isMobile ? '' : 'snap-y snap-mandatory'}`}
         onScroll={handleScroll}
         ref={scrollContainerRef}
         data-loaded={isLoaded}
@@ -100,12 +100,12 @@ const NewsFeed = () => {
             {news.map((newsItem, index) => (
               <div 
                 key={newsItem.id} 
-                className={`w-full flex-shrink-0 ${isMobile ? 'min-h-screen' : 'h-screen snap-start'}`}
+                className={`w-full flex-shrink-0 ${isMobile ? 'h-screen' : 'h-screen snap-start'}`}
                 id={`news-item-${index}`}
               >
                 <NewsCard 
                   news={newsItem} 
-                  isActive={true}
+                  isActive={isMobile ? true : index === activeIndex}
                   isMobile={isMobile}
                 />
               </div>

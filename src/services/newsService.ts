@@ -9,11 +9,17 @@ export type NewsCategory = Database['public']['Enums']['news_category'];
 export async function fetchNews(category?: NewsCategory | 'all') {
   let query = supabase
     .from('news')
-    .select('*')
-    .order('news_date', { ascending: false });
+    .select('*');
   
   if (category && category !== 'all') {
-    query = query.contains('categories', [category]);
+    if (category === 'trending') {
+      // For trending, filter by today's date
+      const today = new Date().toISOString().split('T')[0];
+      query = query.gte('created_at', today + 'T00:00:00.000Z')
+                   .lt('created_at', today + 'T23:59:59.999Z');
+    } else {
+      query = query.contains('categories', [category as NewsCategory]);
+    }
   }
   
   const { data, error } = await query;
@@ -23,7 +29,23 @@ export async function fetchNews(category?: NewsCategory | 'all') {
     throw error;
   }
   
-  return data || [];
+  // Sort by news_date (fallback to created_at) then by created_at
+  const sortedData = (data || []).sort((a, b) => {
+    const aDate = a.news_date || a.created_at;
+    const bDate = b.news_date || b.created_at;
+    
+    // Primary sort by news_date (or created_at if news_date is null)
+    const primarySort = new Date(bDate).getTime() - new Date(aDate).getTime();
+    
+    if (primarySort !== 0) {
+      return primarySort;
+    }
+    
+    // Secondary sort by created_at
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+  });
+  
+  return sortedData;
 }
 
 export async function fetchNewsById(id: string): Promise<News | null> {
